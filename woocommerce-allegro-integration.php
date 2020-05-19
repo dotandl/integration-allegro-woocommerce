@@ -57,6 +57,61 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
+       * Function getting current URL
+       *
+       * @return string Current URL
+       */
+      private function getCurrentUrl(): string {
+        return (isset($_SERVER['HTTPS']) &&
+          $_SERVER['HTTPS'] === 'on' ? "https" : "http") .
+          "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+      }
+
+      /**
+       * Function removing the given param from URL
+       *
+       * This function gets query string from URL, matches param using regex
+       * and removes it. If URL has fragment identifier ("#" and ID of element)
+       * the function may remove it.
+       *
+       * @param string $url URL to remove a param from
+       * @param string $param Parameter to remove
+       * @return string URL without the parameter
+       */
+      private function removeParamFromUrl(string $url, string $param): string {
+        $explode = explode('?', $url);
+        if (!isset($explode[1]))
+          return $explode[0];
+
+        $explode[1] = preg_replace(
+          "/&$param(=[^&]*)?|^$param(=[^&]*)?&?/",
+          '',
+          $explode[1]
+        );
+
+        return $explode[0] . '?' . $explode[1];
+      }
+
+      /**
+       * Function getting base, clean URL to options menu
+       *
+       * This function gets current URL and removes from it as many parameters
+       * as possible.
+       *
+       * @return string Clean URL
+       */
+      private function getCleanUrl(): string {
+        $url = $this->getCurrentUrl();
+
+        $url = $this->removeParamFromUrl($url, 'tab');
+        $url = $this->removeParamFromUrl($url, 'code');
+        $url = $this->removeParamFromUrl($url, 'settings-updated');
+        $url = $this->removeParamFromUrl($url, 'action');
+
+        return $url;
+      }
+
+      /**
        * Function creating plugin's settings
        */
       public function createSettings(): void {
@@ -95,7 +150,7 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayAllegroSection(): void {
         ?>
-        <p>Go to <a href="https://apps.developer.allegro.pl/" target="_blank">apps.developer.allegro.pl</a> and create new web app. Then copy Client ID & Secret and paste them here.</p>
+        <p>Go to <a href="https://apps.developer.allegro.pl/" target="_blank">apps.developer.allegro.pl</a> and create new web app. In "Redirect URI" type <code><?php echo $this->getCleanUrl(); ?></code>. Then copy Client ID & Secret and paste them here.</p>
         <?php
       }
 
