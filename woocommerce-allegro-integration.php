@@ -13,20 +13,32 @@ if (in_array('woocommerce/woocommerce.php',
   apply_filters('active_plugins', get_option('active_plugins')))) {
 
   if (!class_exists('WAI')) {
+    /**
+     * Main WAI's class
+     */
     class WAI {
       private $activeTab;
 
       public function __construct() {
+        // Register styles & scripts
         wp_register_style(
-          'wai_style',
+          'wai_styles',
           plugins_url('wai-styles.css', __FILE__)
         );
 
+        // Bind actions to methods
         add_action('admin_init', array($this, 'createSettings'));
         add_action('admin_menu', array($this, 'createMenu'));
         add_action('admin_enqueue_scripts', array($this, 'loadStylesScripts'));
       }
 
+      /**
+       * Function logging a message to the log file
+       *
+       * @param DateTime $time Timestamp which will be written to log file
+       * @param string $message The message
+       * @param string $messageType Type of the message ('INFO', 'SUCCESS', 'ERROR')
+       */
       private function log(DateTime $time, string $message, string $messageType = 'INFO'): void {
         $time = $time->format(DateTimeInterface::ISO8601);
 
@@ -44,6 +56,9 @@ if (in_array('woocommerce/woocommerce.php',
         );
       }
 
+      /**
+       * Function creating plugin's settings
+       */
       public function createSettings(): void {
         register_setting('wai', 'wai_options');
 
@@ -75,18 +90,27 @@ if (in_array('woocommerce/woocommerce.php',
         );
       }
 
+      /**
+       * Function displaying the Allegro section
+       */
       public function displayAllegroSection(): void {
         ?>
         <p>Go to <a href="https://apps.developer.allegro.pl/" target="_blank">apps.developer.allegro.pl</a> and create new web app. Then copy Client ID & Secret and paste them here.</p>
         <?php
       }
 
+      /**
+       * Function displaying bindings section
+       */
       public function displayBindingsSection(): void {
         ?>
         <p>Get ID of product from WooCommerce and Allegro and bind them here.</p>
         <?php
       }
 
+      /**
+       * Function displaying ID field in Allegro section
+       */
       public function displayAllegroIDField(): void {
         $options = get_option('wai_options');
         $value = isset($options['wai_allegro_id_field']) ?
@@ -96,6 +120,9 @@ if (in_array('woocommerce/woocommerce.php',
         <?php
       }
 
+      /**
+       * Function displaying secret field in Allegro section
+       */
       public function displayAllegroSecretField(): void {
         $options = get_option('wai_options');
         $value = isset($options['wai_allegro_secret_field']) ?
@@ -105,6 +132,9 @@ if (in_array('woocommerce/woocommerce.php',
         <?php
       }
 
+      /**
+       * Function displaying bindings field
+       */
       public function displayBindingsField(): void {
         $options = get_option('wai_options');
         $value = isset($options['wai_bindings_field']) ?
@@ -125,6 +155,9 @@ if (in_array('woocommerce/woocommerce.php',
         <?php
       }
 
+      /**
+       * Function creating plugin's menu
+       */
       public function createMenu(): void {
         $this->activeTab = $_GET['tab'];
 
@@ -137,6 +170,9 @@ if (in_array('woocommerce/woocommerce.php',
         );
       }
 
+      /**
+       * Function displaying the menu
+       */
       public function displayMenu(): void {
         $options = get_option('wai_options');
 
@@ -161,6 +197,7 @@ if (in_array('woocommerce/woocommerce.php',
             <a href="?page=wai&tab=logs" class="nav-tab <?php echo $this->activeTab === 'logs' ? 'nav-tab-active' : '';?>">Logs</a>
           </h2>
           <?php
+          // Check which tab is active now
           switch ($this->activeTab) {
             default:
             case 'settings':
@@ -213,8 +250,11 @@ if (in_array('woocommerce/woocommerce.php',
         <?php
       }
 
+      /**
+       * Function loading WAI's styles & scripts
+       */
       public function loadStylesScripts(): void {
-        wp_enqueue_style('wai_style');
+        wp_enqueue_style('wai_styles');
       }
     }
 
