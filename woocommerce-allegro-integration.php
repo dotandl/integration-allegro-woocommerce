@@ -212,7 +212,7 @@ if (in_array('woocommerce/woocommerce.php',
         </table>
         <button id="wai-bindings-add" class="button button-primary">+</button>
         <button id="wai-bindings-remove" class="button button-secondary">-</button>
-        <input type="hidden" name="wai_options[wai_bindings_field]" value="<?php echo esc_attr($value); ?>">
+        <input id="wai-bindings-json" type="hidden" name="wai_options[wai_bindings_field]" value="<?php echo esc_attr($value); ?>">
         <?php
       }
 
