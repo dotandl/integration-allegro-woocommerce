@@ -1,0 +1,20 @@
+#wai-logs {
+  width: 100%;
+  resize: vertical;
+}
+
+#wai-bindings th {
+  text-align: center;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.wai-input-woocommerce::-webkit-inner-spin-button,
+.wai-input-woocommerce::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.wai-input-woocommerce {
+  -moz-appearance: textfield;
+}

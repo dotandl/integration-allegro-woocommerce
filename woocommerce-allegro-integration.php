@@ -22,8 +22,14 @@ if (in_array('woocommerce/woocommerce.php',
       public function __construct() {
         // Register styles & scripts
         wp_register_style(
-          'wai_styles',
-          plugins_url('wai-styles.css', __FILE__)
+          'wai_style',
+          plugins_url('wai-style.css', __FILE__)
+        );
+
+        wp_register_script(
+          'wai_script',
+          plugins_url('wai-script.js', __FILE__),
+          array('jquery')
         );
 
         // Bind actions to methods
@@ -171,7 +177,7 @@ if (in_array('woocommerce/woocommerce.php',
         $value = isset($options['wai_allegro_id_field']) ?
           $options['wai_allegro_id_field'] : '';
         ?>
-        <input type="text" name="wai_options[wai_allegro_id_field]" value="<?php echo $value; ?>">
+        <input type="text" class="wai-input" name="wai_options[wai_allegro_id_field]" value="<?php echo $value; ?>">
         <?php
       }
 
@@ -183,7 +189,7 @@ if (in_array('woocommerce/woocommerce.php',
         $value = isset($options['wai_allegro_secret_field']) ?
           $options['wai_allegro_secret_field'] : '';
         ?>
-        <input type="password" name="wai_options[wai_allegro_secret_field]" value="<?php echo $value; ?>">
+        <input type="password" class="wai-input" name="wai_options[wai_allegro_secret_field]" value="<?php echo $value; ?>">
         <?php
       }
 
@@ -195,7 +201,7 @@ if (in_array('woocommerce/woocommerce.php',
         $value = isset($options['wai_bindings_field']) ?
           $options['wai_bindings_field'] : '';
         ?>
-        <table>
+        <table id="wai-bindings">
           <thead>
             <tr>
               <th>WooCommerce Product ID</th>
@@ -204,8 +210,8 @@ if (in_array('woocommerce/woocommerce.php',
           </thead>
           <tbody></tbody>
         </table>
-        <button class="button button-primary">+</button>
-        <button class="button button-secondary">-</button>
+        <button id="wai-bindings-add" class="button button-primary">+</button>
+        <button id="wai-bindings-remove" class="button button-secondary">-</button>
         <input type="hidden" name="wai_options[wai_bindings_field]" value="<?php echo esc_attr($value); ?>">
         <?php
       }
@@ -248,7 +254,7 @@ if (in_array('woocommerce/woocommerce.php',
         <div class="wrap">
           <h1>WooCommerce & Allegro Integration</h1>
           <h2 class="nav-tab-wrapper">
-            <a href="?page=wai&tab=settings" class="nav-tab <?php echo $this->activeTab === 'settings' ? 'nav-tab-active' : '';?>">Settings</a>
+            <a href="?page=wai&tab=settings" class="nav-tab <?php echo empty($this->activeTab) || $this->activeTab === 'settings' ? 'nav-tab-active' : '';?>">Settings</a>
             <a href="?page=wai&tab=logs" class="nav-tab <?php echo $this->activeTab === 'logs' ? 'nav-tab-active' : '';?>">Logs</a>
           </h2>
           <?php
@@ -257,7 +263,7 @@ if (in_array('woocommerce/woocommerce.php',
             default:
             case 'settings':
           ?>
-          <form action="options.php" method="post">
+          <form action="options.php" method="post" id="wai-form">
           <?php
           settings_fields('wai');
           do_settings_sections('wai');
@@ -265,29 +271,25 @@ if (in_array('woocommerce/woocommerce.php',
             <p>
               <button type="submit" class="button button-primary">Save settings</button>
           <?php
+          $btnDisabled;
+
           if (!isset($options['wai_allegro_id_field']) ||
               empty($options['wai_allegro_id_field']) ||
               !isset($options['wai_allegro_secret_field']) ||
-              empty($options['wai_allegro_secret_field'])):
+              empty($options['wai_allegro_secret_field'])) {
+            $btnDisabled = TRUE;
+          } else {
+            $btnDisabled = FALSE;
+          }
           ?>
-              <button class="button button-secondary" disabled>Link to Allegro</button>
+              <button class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Link to Allegro</button>
             </p>
             <p>
-              <button class="button button-secondary" disabled>Sync WooCommerce -> Allegro</button>
+              <button class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Sync WooCommerce -> Allegro</button>
             </p>
             <p>
-              <button class="button button-secondary" disabled>Sync Allegro -> WooCommerce</button>
+              <button class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Sync Allegro -> WooCommerce</button>
             </p>
-            <?php else: ?>
-              <button class="button button-secondary">Link to Allegro</button>
-            </p>
-            <p>
-              <button class="button button-secondary">Sync WooCommerce -> Allegro</button>
-            </p>
-            <p>
-              <button class="button button-secondary">Sync Allegro -> WooCommerce</button>
-            </p>
-            <?php endif; ?>
           </form>
           <?php
               break;
@@ -295,7 +297,7 @@ if (in_array('woocommerce/woocommerce.php',
           ?>
           <h2>Logs</h2>
           <p>Debug info</p>
-          <textarea id="logs-textarea" rows="10" readonly><?php echo @file_get_contents(plugin_dir_path(__FILE__) . 'wai-debug.log'); ?></textarea>
+          <textarea id="wai-logs" rows="10" readonly><?php echo @file_get_contents(plugin_dir_path(__FILE__) . 'wai-debug.log'); ?></textarea>
           <a href="<?php echo plugins_url('wai-debug.log', __FILE__); ?>" class="button button-primary" download>Download log file</a>
           <?php
               break;
@@ -309,7 +311,8 @@ if (in_array('woocommerce/woocommerce.php',
        * Function loading WAI's styles & scripts
        */
       public function loadStylesScripts(): void {
-        wp_enqueue_style('wai_styles');
+        wp_enqueue_style('wai_style');
+        wp_enqueue_script('wai_script');
       }
     }
 
