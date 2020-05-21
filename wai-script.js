@@ -1,6 +1,6 @@
 'use strict';
 
-const binding = '<tr>' +
+const bindingElement = '<tr>' +
   '<th><input type="number" class="wai-input wai-input-woocommerce" placeholder="WooCommerce"></th>' +
   '<th><input type="text" class="wai-input wai-input-allegro" placeholder="Allegro"></th>' +
   '</tr>';
@@ -29,7 +29,7 @@ jQuery($ => {
   // Add new binding
   $('#wai-bindings-add').click(e => {
     e.preventDefault();
-    $('#wai-bindings > tbody').append(binding);
+    $('#wai-bindings > tbody').append(bindingElement);
   });
 
   // Remove binding
@@ -39,7 +39,7 @@ jQuery($ => {
   });
 
   // Save bindings and submit the form
-  $("#wai-submit").click((e) => {
+  $("#wai-submit").click(e => {
     e.preventDefault();
     let bindings = [];
 

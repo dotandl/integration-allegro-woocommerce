@@ -7,6 +7,10 @@
 
 declare(strict_types = 1);
 
+// If you want to use Allegro Sandbox instead of Allegro,
+// uncomment the line below
+define('USE_ALLEGRO_SANDBOX', TRUE);
+
 defined('ABSPATH') or die('Error: Plugin has been run outside of WordPress');
 
 if (in_array('woocommerce/woocommerce.php',
@@ -18,6 +22,8 @@ if (in_array('woocommerce/woocommerce.php',
      */
     class WAI {
       private $activeTab;
+      private $allegroUrl;
+      private $allegroApiUrl;
 
       public function __construct() {
         // Register styles & scripts
@@ -36,6 +42,14 @@ if (in_array('woocommerce/woocommerce.php',
         add_action('admin_init', array($this, 'createSettings'));
         add_action('admin_menu', array($this, 'createMenu'));
         add_action('admin_enqueue_scripts', array($this, 'loadStylesScripts'));
+
+        if (defined('USE_ALLEGRO_SANDBOX')) {
+          $this->allegroApiUrl = 'https://api.allegro.pl.allegrosandbox.pl';
+          $this->allegroUrl = 'https://allegro.pl.allegrosandbox.pl';
+        } else {
+          $this->allegroApiUrl = 'https://api.allegro.pl';
+          $this->allegroUrl = 'https://allegro.pl';
+        }
       }
 
       /**
@@ -43,9 +57,15 @@ if (in_array('woocommerce/woocommerce.php',
        *
        * @param DateTime $time Timestamp which will be written to log file
        * @param string $message The message
+       * @param string $funcName Name of the function the message is from
        * @param string $messageType Type of the message ('INFO', 'SUCCESS', 'ERROR')
        */
-      private function log(DateTime $time, string $message, string $messageType = 'INFO'): void {
+      private function log(
+        DateTime $time,
+        string $message,
+        string $funcName,
+        string $messageType = 'INFO'
+      ): void {
         $time = $time->format(DateTimeInterface::ISO8601);
 
         if ($messageType !== 'INFO' ||
@@ -53,7 +73,7 @@ if (in_array('woocommerce/woocommerce.php',
             $messageType !== 'ERROR')
           $messageType = 'INFO';
 
-        $message = "[$time] $messageType $message";
+        $message = "[$time] ($messageType) $funcName \"$message\"";
 
         error_log(
           $message . PHP_EOL,
@@ -107,6 +127,7 @@ if (in_array('woocommerce/woocommerce.php',
        * @return string Clean URL
        */
       private function getCleanUrl(): string {
+        // TODO: Update this function
         $url = $this->getCurrentUrl();
 
         $url = $this->removeParamFromUrl($url, 'tab');
@@ -121,6 +142,15 @@ if (in_array('woocommerce/woocommerce.php',
        * Function creating plugin's settings
        */
       public function createSettings(): void {
+        if (isset($_GET['code'])) { } // TODO: Fill it
+
+        if (!get_option('wai_token')) {
+          add_option('wai_token');
+        }
+        if (!get_option('wai_refresh_token')) {
+          add_option('wai_refresh_token');
+        }
+
         register_setting('wai', 'wai_options');
 
         add_settings_section('wai_allegro', 'Allegro API settings', array($this, 'displayAllegroSection'), 'wai');
@@ -269,13 +299,11 @@ if (in_array('woocommerce/woocommerce.php',
           do_settings_sections('wai');
           ?>
             <p>
-              <button type="submit" class="button button-primary">Save settings</button>
+              <button id="wai-submit" class="button button-primary">Save settings</button>
           <?php
           $btnDisabled;
 
-          if (!isset($options['wai_allegro_id_field']) ||
-              empty($options['wai_allegro_id_field']) ||
-              !isset($options['wai_allegro_secret_field']) ||
+          if (empty($options['wai_allegro_id_field']) ||
               empty($options['wai_allegro_secret_field'])) {
             $btnDisabled = TRUE;
           } else {
