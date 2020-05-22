@@ -139,6 +139,43 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
+       * Function sending an HTTP request to the external server
+       *
+       * @param string $url Server's URL
+       * @param string $reqType Request type (e.g. GET, POST, PUT, DELETE)
+       * @param array $headers Additional HTTP request headers
+       * @param string $body Additional request body
+       * @return array Response and HTTP code
+       */
+      private function sendRequest(
+        string $url,
+        string $reqType,
+        array $headers = NULL,
+        string $body = NULL
+      ): array {
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $url,
+          CURLOPT_CUSTOMREQUEST => $reqType,
+          CURLOPT_RETURNTRANSFER => TRUE
+        ));
+
+        if ($headers !== NULL)
+          curl_setopt($curl, CURL_HTTPHEADER, $headers);
+
+        if ($body !== NULL)
+          curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
+
+        $res = curl_exec($curl);
+        $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+        return array(
+          'response' => $res,
+          'http_code' => $code
+        );
+      }
+
+      /**
        * Function creating plugin's settings
        */
       public function createSettings(): void {
@@ -219,7 +256,9 @@ if (in_array('woocommerce/woocommerce.php',
         $value = isset($options['wai_allegro_secret_field']) ?
           $options['wai_allegro_secret_field'] : '';
         ?>
-        <input type="password" class="wai-input" name="wai_options[wai_allegro_secret_field]" value="<?php echo $value; ?>">
+        <input id="wai-allegro-secret" type="password" class="wai-input" name="wai_options[wai_allegro_secret_field]" value="<?php echo $value; ?>">
+        <label for="wai-allegro-secret-toggle-visibility">Toggle visbility</label>
+        <input type="checkbox" id="wai-allegro-secret-toggle-visibility">
         <?php
       }
 
@@ -301,8 +340,6 @@ if (in_array('woocommerce/woocommerce.php',
             <p>
               <button id="wai-submit" class="button button-primary">Save settings</button>
           <?php
-          $btnDisabled;
-
           if (empty($options['wai_allegro_id_field']) ||
               empty($options['wai_allegro_secret_field'])) {
             $btnDisabled = TRUE;

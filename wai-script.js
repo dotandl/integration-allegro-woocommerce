@@ -26,6 +26,11 @@ jQuery($ => {
     }
   });
 
+  // Toggle Secret's visibility when checkbox is checked
+  $('#wai-allegro-secret-toggle-visibility').change(e => {
+    $('#wai-allegro-secret').get(0).type = e.target.checked ? 'text' : 'password';
+  });
+
   // Add new binding
   $('#wai-bindings-add').click(e => {
     e.preventDefault();
