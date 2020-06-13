@@ -1,9 +1,32 @@
 'use strict';
 
+/**
+ * One binding of all bindings table
+ */
 const bindingElement = '<tr>' +
   '<th><input type="number" class="wai-input wai-input-woocommerce" placeholder="WooCommerce"></th>' +
   '<th><input type="text" class="wai-input wai-input-allegro" placeholder="Allegro"></th>' +
   '</tr>';
+
+/**
+ * Function adding a parameter to the current URL
+ *
+ * This function gets current URL and checks whether it has already got params
+ * and adds new param depends on that info. If URL has fragment
+ * identifier ("#" and ID of element) the function will not work properly.
+ *
+ * @param string key Param's key
+ * @param string value Param's value
+ * @returns string Final URL
+ */
+function addParamToUrl(key, value) {
+  let url = location.href;
+  if (url.includes('?'))
+    url += `&${key}=${value}`;
+  else
+    url += `?${key}=${value}`;
+  return url;
+}
 
 jQuery($ => {
   // If hidden bindings field has value parse it and display bindings fields
@@ -41,6 +64,11 @@ jQuery($ => {
   $('#wai-bindings-remove').click(e => {
     e.preventDefault();
     $('#wai-bindings > tbody').children().last().remove();
+  });
+
+  $('#wai-link-allegro').click(e => {
+    e.preventDefault();
+    location.href = addParamToUrl('action', 'link-allegro');
   });
 
   // Save bindings and submit the form

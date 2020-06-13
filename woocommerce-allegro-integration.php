@@ -22,8 +22,10 @@ if (in_array('woocommerce/woocommerce.php',
      */
     class WAI {
       private $activeTab;
+
       private $allegroUrl;
       private $allegroApiUrl;
+      private $allegroAppsUrl;
 
       public function __construct() {
         // Register styles & scripts
@@ -44,11 +46,14 @@ if (in_array('woocommerce/woocommerce.php',
         add_action('admin_enqueue_scripts', array($this, 'loadStylesScripts'));
 
         if (defined('USE_ALLEGRO_SANDBOX')) {
-          $this->allegroApiUrl = 'https://api.allegro.pl.allegrosandbox.pl';
           $this->allegroUrl = 'https://allegro.pl.allegrosandbox.pl';
+          $this->allegroApiUrl = 'https://api.allegro.pl.allegrosandbox.pl';
+          $this->allegroAppsUrl =
+            'https://apps.developer.allegro.pl.allegrosandbox.pl';
         } else {
-          $this->allegroApiUrl = 'https://api.allegro.pl';
           $this->allegroUrl = 'https://allegro.pl';
+          $this->allegroApiUrl = 'https://api.allegro.pl';
+          $this->allegroAppsUrl = 'https://apps.developer.allegro.pl';
         }
       }
 
@@ -62,8 +67,8 @@ if (in_array('woocommerce/woocommerce.php',
        */
       private function log(
         DateTime $time,
-        string $message,
         string $funcName,
+        string $message,
         string $messageType = 'INFO'
       ): void {
         $time = $time->format(DateTimeInterface::ISO8601);
@@ -168,18 +173,77 @@ if (in_array('woocommerce/woocommerce.php',
 
         $res = curl_exec($curl);
         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $err = curl_error($curl);
 
-        return array(
+        $ret = array(
           'response' => $res,
-          'http_code' => $code
+          'http_code' => $code,
+          'error' => $err
         );
+
+        curl_close($curl);
+        return $ret;
+      }
+
+      /**
+       * Function linking user's account to an Allegro application
+       */
+      private function linkToAllegro(): void {
+        $this->log(new DateTime, __METHOD__, 'Started linking to Allegro');
+        $options = get_option('wai_options');
+
+        if (empty($options['wai_allegro_id_field'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'Client ID does not exist or is empty',
+            'ERROR'
+          );
+          return;
+        }
+
+        $redirectUri = $this->getCleanUrl();
+        $clientId = $options['wai_allegro_id_field'];
+
+        // TODO: rewrite it using http_build_query
+        // TODO: use state param
+        $url = "$this->allegroUrl/auth/oauth/authorize" .
+          "?response_type=code&client_id=$clientId&redirect_uri=$redirectUri";
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'URL for linking to Allegro prepared successfully',
+          'SUCCESS'
+        );
+
+        header("Location: $url");
       }
 
       /**
        * Function creating plugin's settings
        */
       public function createSettings(): void {
-        if (isset($_GET['code'])) { } // TODO: Fill it
+        if (isset($_GET['code'])) {
+          echo $_GET['code'];
+        } // TODO: Fill it
+
+        if (isset($_GET['action'])) {
+          $refresh = TRUE;
+
+          switch ($_GET['action']) {
+            case 'link-allegro':
+              $this->linkToAllegro();
+              $refresh = FALSE;
+              break;
+            default:
+              $refresh = FALSE;
+              break;
+          }
+
+          if ($refresh === TRUE)
+            header("Location: {$this->getCleanUrl()}");
+        }
 
         if (!get_option('wai_token')) {
           add_option('wai_token');
@@ -190,8 +254,19 @@ if (in_array('woocommerce/woocommerce.php',
 
         register_setting('wai', 'wai_options');
 
-        add_settings_section('wai_allegro', 'Allegro API settings', array($this, 'displayAllegroSection'), 'wai');
-        add_settings_section('wai_bindings', 'Bindings', array($this, 'displayBindingsSection'), 'wai');
+        add_settings_section(
+          'wai_allegro',
+          'Allegro API settings',
+          array($this, 'displayAllegroSection'),
+          'wai'
+        );
+
+        add_settings_section(
+          'wai_bindings',
+          'Bindings',
+          array($this, 'displayBindingsSection'),
+          'wai'
+        );
 
         add_settings_field(
           'wai_allegro_id_field',
@@ -223,7 +298,7 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayAllegroSection(): void {
         ?>
-        <p>Go to <a href="https://apps.developer.allegro.pl/" target="_blank">apps.developer.allegro.pl</a> and create new web app. In "Redirect URI" type <code><?php echo $this->getCleanUrl(); ?></code>. Then copy Client ID & Secret and paste them here.</p>
+        <p>Go to <a href="<?php echo $this->allegroAppsUrl; ?>" target="_blank">apps.developer.allegro.pl</a> and create new web app. In "Redirect URI" type <code><?php echo $this->getCleanUrl(); ?></code>. Then copy Client ID & Secret and paste them here.</p>
         <?php
       }
 
@@ -241,8 +316,7 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayAllegroIDField(): void {
         $options = get_option('wai_options');
-        $value = isset($options['wai_allegro_id_field']) ?
-          $options['wai_allegro_id_field'] : '';
+        $options = $options['wai_allegro_id_field'];
         ?>
         <input type="text" class="wai-input" name="wai_options[wai_allegro_id_field]" value="<?php echo $value; ?>">
         <?php
@@ -253,8 +327,7 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayAllegroSecretField(): void {
         $options = get_option('wai_options');
-        $value = isset($options['wai_allegro_secret_field']) ?
-          $options['wai_allegro_secret_field'] : '';
+        $options = $options['wai_allegro_secret_field'];
         ?>
         <input id="wai-allegro-secret" type="password" class="wai-input" name="wai_options[wai_allegro_secret_field]" value="<?php echo $value; ?>">
         <label for="wai-allegro-secret-toggle-visibility">Toggle visbility</label>
@@ -267,8 +340,8 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayBindingsField(): void {
         $options = get_option('wai_options');
-        $value = isset($options['wai_bindings_field']) ?
-          $options['wai_bindings_field'] : '';
+        $value = !empty($options['wai_bindings_field']) ?
+          $options['wai_bindings_field'] : '[]';
         ?>
         <table id="wai-bindings">
           <thead>
@@ -347,7 +420,7 @@ if (in_array('woocommerce/woocommerce.php',
             $btnDisabled = FALSE;
           }
           ?>
-              <button class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Link to Allegro</button>
+              <button id="wai-link-allegro" class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Link to Allegro</button>
             </p>
             <p>
               <button class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Sync WooCommerce -> Allegro</button>
