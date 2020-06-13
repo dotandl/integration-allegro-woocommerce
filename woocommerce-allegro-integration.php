@@ -199,11 +199,21 @@ if (in_array('woocommerce/woocommerce.php',
             'Auth code does not exist or is empty',
             'ERROR'
           );
+
+          add_settings_error(
+            'wai',
+            'wai_error',
+            'Could not get the token',
+            'error'
+          );
+
           return;
         }
 
         if (empty($options['wai_allegro_id_field']) ||
             empty($options['wai_allegro_secret_field'])) {
+          // It's not necessary to display an error badge: "Link to Allegro"
+          // button is locked when ID or Secret is empty
           $this->log(
             new DateTime(),
             __METHOD__,
@@ -231,7 +241,7 @@ if (in_array('woocommerce/woocommerce.php',
             new DateTime(),
             __METHOD__,
             "Something went wrong: http_code=\"{$res['http_code']}\" " .
-            "error=\"{$res['error']}\"",
+              "error=\"{$res['error']}\"",
             'ERROR'
           );
 
@@ -265,6 +275,98 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
+       * Function refreshing the token
+       */
+      private function refreshToken(): void {
+        $this->log(new DateTime(), __METHOD__, 'Started refreshing the token');
+        $options = get_option('wai_options');
+
+        if (empty(get_option('wai_refresh_token'))) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'Refresh token does not exist or is empty',
+            'ERROR'
+          );
+
+          add_settings_error(
+            'wai',
+            'wai_error',
+            'Could not refresh the token. Try to remove the app from linked ' .
+              'apps in Allegro settings and link it again.',
+            'error'
+          );
+
+          return;
+        }
+
+        if (empty($options['wai_allegro_id_field']) ||
+            empty($options['wai_allegro_secret_field'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'Client ID and/or Secret does not exist or is empty',
+            'ERROR'
+          );
+
+          add_settings_error(
+            'wai',
+            'wai_error',
+            'Could not refresh the token. Try to fill in ' .
+              'Client ID and/or Secret field(s)',
+            'error'
+          );
+
+          return;
+        }
+
+
+        $refreshToken = get_option('wai_refresh_token');
+        $redirectUri = $this->getCleanUrl();
+        $clientId = $options['wai_allegro_id_field'];
+        $clientSecret = $options['wai_allegro_secret_field'];
+        $encodedCredentials = base64_encode("$clientId:$clientSecret");
+
+        $url = "$this->allegroUrl/auth/oauth/token" .
+          "?grant_type=refresh_token&refresh_token=$refreshToken" .
+          "&redirect_uri=$redirectUri";
+
+        $headers = array('Authorization: Basic ' . $encodedCredentials);
+
+        $res = $this->sendRequest($url, 'POST', $headers);
+
+        if ($res['http_code'] !== 200 || !empty($res['error'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Something went wrong: http_code=\"{$res['http_code']}\" " .
+              "error={$res['error']}",
+            'ERROR'
+          );
+
+          add_settings_error(
+            'wai',
+            'wai_error',
+            'Could not refresh the token',
+            'error'
+          );
+
+          return;
+        }
+
+        $decodedRes = json_decode($res['response']);
+        update_option('wai_token', $decodedRes->access_token);
+        update_option('wai_refresh_token', $decodedRes->refresh_token);
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'Token refreshed successfully',
+          'ERROR'
+        );
+      }
+
+      /**
        * Function linking user's account to an Allegro application
        */
       private function linkToAllegro(): void {
@@ -272,6 +374,8 @@ if (in_array('woocommerce/woocommerce.php',
         $options = get_option('wai_options');
 
         if (empty($options['wai_allegro_id_field'])) {
+          // It's not necessary to display an error badge: "Link to Allegro"
+          // button is locked when ID or Secret is empty
           $this->log(
             new DateTime(),
             __METHOD__,
