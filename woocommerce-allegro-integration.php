@@ -166,7 +166,7 @@ if (in_array('woocommerce/woocommerce.php',
         ));
 
         if ($headers !== NULL)
-          curl_setopt($curl, CURL_HTTPHEADER, $headers);
+          curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
         if ($body !== NULL)
           curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
@@ -186,10 +186,89 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
+       * Function getting Allegro token
+       */
+      private function getToken(): void {
+        $this->log(new DateTime(), __METHOD__, 'Started getting a token');
+        $options = get_option('wai_options');
+
+        if (empty($_GET['code'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'Auth code does not exist or is empty',
+            'ERROR'
+          );
+          return;
+        }
+
+        if (empty($options['wai_allegro_id_field']) ||
+            empty($options['wai_allegro_secret_field'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'Client ID and/or Secret does not exist or is empty',
+            'ERROR'
+          );
+          return;
+        }
+
+        $code = $_GET['code'];
+        $redirectUri = $this->getCleanUrl();
+        $clientId = $options['wai_allegro_id_field'];
+        $clientSecret = $options['wai_allegro_secret_field'];
+        $encodedCredentials = base64_encode("$clientId:$clientSecret");
+
+        $url = "$this->allegroUrl/auth/oauth/token" .
+          "?grant_type=authorization_code&code=$code&redirect_uri=$redirectUri";
+
+        $headers = array("Authorization: Basic $encodedCredentials");
+
+        $res = $this->sendRequest($url, 'POST', $headers);
+
+        if ($res['http_code'] !== 200 || !empty($res['error'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Something went wrong: http_code=\"{$res['http_code']}\" " .
+            "error=\"{$res['error']}\"",
+            'ERROR'
+          );
+
+          add_settings_error(
+            'wai',
+            'wai_error',
+            'Could not get the token',
+            'error'
+          );
+
+          return;
+        }
+
+        $decodedRes = json_decode($res['response']);
+        update_option('wai_token', $decodedRes->access_token);
+        update_option('wai_refresh_token', $decodedRes->refresh_token);
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'Token obtained successfully',
+          'SUCCESS'
+        );
+
+        add_settings_error(
+          'wai',
+          'wai_error',
+          'Token obtained successfully',
+          'success'
+        );
+      }
+
+      /**
        * Function linking user's account to an Allegro application
        */
       private function linkToAllegro(): void {
-        $this->log(new DateTime, __METHOD__, 'Started linking to Allegro');
+        $this->log(new DateTime(), __METHOD__, 'Started linking to Allegro');
         $options = get_option('wai_options');
 
         if (empty($options['wai_allegro_id_field'])) {
@@ -224,9 +303,8 @@ if (in_array('woocommerce/woocommerce.php',
        * Function creating plugin's settings
        */
       public function createSettings(): void {
-        if (isset($_GET['code'])) {
-          echo $_GET['code'];
-        } // TODO: Fill it
+        if (isset($_GET['code']))
+          $this->getToken();
 
         if (isset($_GET['action'])) {
           $refresh = TRUE;
@@ -316,7 +394,7 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayAllegroIDField(): void {
         $options = get_option('wai_options');
-        $options = $options['wai_allegro_id_field'];
+        $value = $options['wai_allegro_id_field'];
         ?>
         <input type="text" class="wai-input" name="wai_options[wai_allegro_id_field]" value="<?php echo $value; ?>">
         <?php
@@ -327,7 +405,7 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayAllegroSecretField(): void {
         $options = get_option('wai_options');
-        $options = $options['wai_allegro_secret_field'];
+        $value = $options['wai_allegro_secret_field'];
         ?>
         <input id="wai-allegro-secret" type="password" class="wai-input" name="wai_options[wai_allegro_secret_field]" value="<?php echo $value; ?>">
         <label for="wai-allegro-secret-toggle-visibility">Toggle visbility</label>
