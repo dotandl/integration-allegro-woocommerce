@@ -73,8 +73,8 @@ if (in_array('woocommerce/woocommerce.php',
       ): void {
         $time = $time->format(DateTimeInterface::ISO8601);
 
-        if ($messageType !== 'INFO' ||
-            $messageType !== 'SUCCESS' ||
+        if ($messageType !== 'INFO' &&
+            $messageType !== 'SUCCESS' &&
             $messageType !== 'ERROR')
           $messageType = 'INFO';
 
@@ -102,8 +102,7 @@ if (in_array('woocommerce/woocommerce.php',
        * Function removing the given param from URL
        *
        * This function gets query string from URL, matches param using regex
-       * and removes it. If URL has fragment identifier ("#" and ID of element)
-       * the function may remove it.
+       * and removes it.
        *
        * @param string $url URL to remove a param from
        * @param string $param Parameter to remove
@@ -132,11 +131,11 @@ if (in_array('woocommerce/woocommerce.php',
        * @return string Clean URL
        */
       private function getCleanUrl(): string {
-        // TODO: Update this function
         $url = $this->getCurrentUrl();
 
         $url = $this->removeParamFromUrl($url, 'tab');
         $url = $this->removeParamFromUrl($url, 'code');
+        $url = $this->removeParamFromUrl($url, 'state');
         $url = $this->removeParamFromUrl($url, 'settings-updated');
         $url = $this->removeParamFromUrl($url, 'action');
 
@@ -200,14 +199,59 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          add_settings_error(
-            'wai',
-            'wai_error',
-            'Could not get the token',
-            'error'
+          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+          add_option('wai_delayed_settings_error', array(
+            'setting' => 'wai',
+            'code' => 'wai_error',
+            'message' => 'Could not link to Allegro. ' .
+              'See the logs for more information',
+            'type' => 'error'
+          ));
+
+          goto reload;
+        }
+
+        if (empty($_GET['state'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'Server has not returned the state',
+            'ERROR'
           );
 
-          return;
+          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+          add_option('wai_delayed_settings_error', array(
+            'setting' => 'wai',
+            'code' => 'wai_error',
+            'message' => 'Could not link to Allegro. ' .
+              'See the logs for more information',
+            'type' => 'error'
+          ));
+
+          goto reload;
+        }
+
+        $state = get_option('wai_state');
+        delete_option('wai_state');
+
+        if ($_GET['state'] !== $state) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'State returned by server is invalid',
+            'ERROR'
+          );
+
+          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+          add_option('wai_delayed_settings_error', array(
+            'setting' => 'wai',
+            'code' => 'wai_error',
+            'message' => 'Could not link to Allegro. ' .
+              'See the logs for more information',
+            'type' => 'error'
+          ));
+
+          goto reload;
         }
 
         if (empty($options['wai_allegro_id_field']) ||
@@ -220,7 +264,7 @@ if (in_array('woocommerce/woocommerce.php',
             'Client ID and/or Secret does not exist or is empty',
             'ERROR'
           );
-          return;
+          goto reload;
         }
 
         $code = $_GET['code'];
@@ -245,14 +289,16 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          add_settings_error(
-            'wai',
-            'wai_error',
-            'Could not get the token',
-            'error'
-          );
+          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+          add_option('wai_delayed_settings_error', array(
+            'setting' => 'wai',
+            'code' => 'wai_error',
+            'message' => 'Could not link to Allegro. ' .
+              'See the logs for more information',
+            'type' => 'error'
+          ));
 
-          return;
+          goto reload;
         }
 
         $decodedRes = json_decode($res['response']);
@@ -266,12 +312,16 @@ if (in_array('woocommerce/woocommerce.php',
           'SUCCESS'
         );
 
-        add_settings_error(
-          'wai',
-          'wai_error',
-          'Token obtained successfully',
-          'success'
-        );
+        define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+        add_option('wai_delayed_settings_error', array(
+          'setting' => 'wai',
+          'code' => 'wai_error',
+          'message' => 'Linked to Allegro successfully',
+          'type' => 'success'
+        ));
+
+        reload:
+        header("Location: {$this->getCleanUrl()}");
       }
 
       /**
@@ -289,13 +339,14 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          add_settings_error(
-            'wai',
-            'wai_error',
-            'Could not refresh the token. Try to remove the app from linked ' .
-              'apps in Allegro settings and link it again.',
-            'error'
-          );
+          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+          add_option('wai_delayed_settings_error', array(
+            'setting' => 'wai',
+            'code' => 'wai_error',
+            'message' => 'Could not refresh the token. Try to remove the app ' .
+              'from linked apps in Allegro settings and link it again.',
+            'type' => 'error'
+          ));
 
           return;
         }
@@ -309,13 +360,14 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          add_settings_error(
-            'wai',
-            'wai_error',
-            'Could not refresh the token. Try to fill in ' .
+          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+          add_option('wai_delayed_settings_error', array(
+            'setting' => 'wai',
+            'code' => 'wai_error',
+            'message' => 'Could not refresh the token. Try to fill in ' .
               'Client ID and/or Secret field(s)',
-            'error'
-          );
+            'type' => 'error'
+          ));
 
           return;
         }
@@ -344,12 +396,14 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          add_settings_error(
-            'wai',
-            'wai_error',
-            'Could not refresh the token',
-            'error'
-          );
+          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+          add_option('wai_delayed_settings_error', array(
+            'setting' => 'wai',
+            'code' => 'wai_error',
+            'message' => 'Could not refresh the token. ' .
+              'See the logs for more information',
+            'type' => 'error'
+          ));
 
           return;
         }
@@ -362,7 +416,7 @@ if (in_array('woocommerce/woocommerce.php',
           new DateTime(),
           __METHOD__,
           'Token refreshed successfully',
-          'ERROR'
+          'SUCCESS'
         );
       }
 
@@ -387,17 +441,19 @@ if (in_array('woocommerce/woocommerce.php',
 
         $redirectUri = $this->getCleanUrl();
         $clientId = $options['wai_allegro_id_field'];
+        $state = bin2hex(random_bytes(128 / 8));
 
-        // TODO: rewrite it using http_build_query
-        // TODO: use state param
+        add_option('wai_state', $state);
+
         $url = "$this->allegroUrl/auth/oauth/authorize" .
-          "?response_type=code&client_id=$clientId&redirect_uri=$redirectUri";
+          "?response_type=code&client_id=$clientId&state=$state" .
+          "&prompt=confirm&redirect_uri=$redirectUri";
 
         $this->log(
           new DateTime(),
           __METHOD__,
           'URL for linking to Allegro prepared successfully',
-          'SUCCESS'
+          'INFO'
         );
 
         header("Location: $url");
@@ -425,6 +481,20 @@ if (in_array('woocommerce/woocommerce.php',
 
           if ($refresh === TRUE)
             header("Location: {$this->getCleanUrl()}");
+        }
+
+        if (!empty(get_option('wai_delayed_settings_error')) &&
+            !defined('DONT_SHOW_SETTINGS_ERROR')) {
+          $option = get_option('wai_delayed_settings_error');
+
+          add_settings_error(
+            $option['setting'],
+            $option['code'],
+            $option['message'],
+            $option['type']
+          );
+
+          delete_option('wai_delayed_settings_error');
         }
 
         if (!get_option('wai_token')) {

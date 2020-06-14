@@ -13,7 +13,7 @@ const bindingElement = '<tr>' +
  *
  * This function gets current URL and checks whether it has already got params
  * and adds new param depends on that info. If URL has fragment
- * identifier ("#" and ID of element) the function will not work properly.
+ * identifier ("#" and ID of element) it will be removec.
  *
  * @param string key Param's key
  * @param string value Param's value
@@ -21,6 +21,9 @@ const bindingElement = '<tr>' +
  */
 function addParamToUrl(key, value) {
   let url = location.href;
+
+  url = url.split('#')[0];
+
   if (url.includes('?'))
     url += `&${key}=${value}`;
   else
