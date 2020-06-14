@@ -143,6 +143,50 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
+       * Function generating a string for PKCE validation
+       *
+       * This function generates a random string in length between 43 and 128
+       * characters.
+       *
+       * @return string Final string
+       */
+      private function generateStringForPkce(): string {
+        $length = rand(43, 128);
+
+        $characters =
+          '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+
+        return $randomString;
+      }
+
+      /**
+       * Function encoding the string for PKCE validation
+       *
+       * This function converts strings to an ASCII string, generates
+       * an SHA256 hash from it and encodes it to base64 string.
+       *
+       * @param string $str String to encode
+       * @return string Encoded string
+       */
+      private function encodeStringForPkce(string $str): string {
+        $str = mb_convert_encoding($str, 'ASCII');
+        $hash = hash('SHA256', $str, TRUE);
+        $str = base64_encode($hash);
+
+        $str = str_replace('+', '-', $str);
+        $str = str_replace('/', '_', $str);
+        $str = str_replace('=', '', $str);
+
+        return $str;
+      }
+
+      /**
        * Function sending an HTTP request to the external server
        *
        * @param string $url Server's URL
@@ -188,6 +232,7 @@ if (in_array('woocommerce/woocommerce.php',
        * Function getting Allegro token
        */
       private function getToken(): void {
+        define('DONT_SHOW_SETTINGS_ERROR', TRUE);
         $this->log(new DateTime(), __METHOD__, 'Started getting a token');
         $options = get_option('wai_options');
 
@@ -199,7 +244,25 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+          add_option('wai_delayed_settings_error', array(
+            'setting' => 'wai',
+            'code' => 'wai_error',
+            'message' => 'Could not link to Allegro. ' .
+              'See the logs for more information',
+            'type' => 'error'
+          ));
+
+          goto reload;
+        }
+
+        if (!get_option('wai_code_verifier')) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'There was no saved code verifier',
+            'ERROR'
+          );
+
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
@@ -219,7 +282,25 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+          add_option('wai_delayed_settings_error', array(
+            'setting' => 'wai',
+            'code' => 'wai_error',
+            'message' => 'Could not link to Allegro. ' .
+              'See the logs for more information',
+            'type' => 'error'
+          ));
+
+          goto reload;
+        }
+
+        if (!get_option('wai_state')) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'There was no saved state',
+            'ERROR'
+          );
+
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
@@ -242,7 +323,6 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
@@ -273,8 +353,12 @@ if (in_array('woocommerce/woocommerce.php',
         $clientSecret = $options['wai_allegro_secret_field'];
         $encodedCredentials = base64_encode("$clientId:$clientSecret");
 
+        $codeVerifier = get_option('wai_code_verifier');
+        delete_option('wai_code_verifier');
+
         $url = "$this->allegroUrl/auth/oauth/token" .
-          "?grant_type=authorization_code&code=$code&redirect_uri=$redirectUri";
+          "?grant_type=authorization_code&code=$code" .
+          "&code_verifier=$codeVerifier&redirect_uri=$redirectUri";
 
         $headers = array("Authorization: Basic $encodedCredentials");
 
@@ -289,7 +373,6 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
@@ -312,7 +395,6 @@ if (in_array('woocommerce/woocommerce.php',
           'SUCCESS'
         );
 
-        define('DONT_SHOW_SETTINGS_ERROR', TRUE);
         add_option('wai_delayed_settings_error', array(
           'setting' => 'wai',
           'code' => 'wai_error',
@@ -339,7 +421,6 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
@@ -360,7 +441,6 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
@@ -371,7 +451,6 @@ if (in_array('woocommerce/woocommerce.php',
 
           return;
         }
-
 
         $refreshToken = get_option('wai_refresh_token');
         $redirectUri = $this->getCleanUrl();
@@ -396,7 +475,6 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          define('DONT_SHOW_SETTINGS_ERROR', TRUE);
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
@@ -441,13 +519,17 @@ if (in_array('woocommerce/woocommerce.php',
 
         $redirectUri = $this->getCleanUrl();
         $clientId = $options['wai_allegro_id_field'];
+        $codeVerifier = $this->generateStringForPkce();
+        $codeChallenge = $this->encodeStringForPkce($codeVerifier);
         $state = bin2hex(random_bytes(128 / 8));
 
+        add_option('wai_code_verifier', $codeVerifier);
         add_option('wai_state', $state);
 
         $url = "$this->allegroUrl/auth/oauth/authorize" .
-          "?response_type=code&client_id=$clientId&state=$state" .
-          "&prompt=confirm&redirect_uri=$redirectUri";
+          "?response_type=code&client_id=$clientId&code_challenge_method=S256" .
+          "&code_challenge=$codeChallenge&prompt=confirm&state=$state" .
+          "&redirect_uri=$redirectUri";
 
         $this->log(
           new DateTime(),
@@ -684,6 +766,7 @@ if (in_array('woocommerce/woocommerce.php',
           <?php
               break;
             case 'logs':
+              // TODO: add "Clean log file" button
           ?>
           <h2>Logs</h2>
           <p>Debug info</p>
