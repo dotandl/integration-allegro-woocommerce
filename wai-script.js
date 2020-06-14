@@ -33,14 +33,14 @@ function addParamToUrl(key, value) {
 
 jQuery($ => {
   // If hidden bindings field has value parse it and display bindings fields
-  if ($("#wai-bindings-json").length) {
-    let bindings = JSON.parse($("#wai-bindings-json").val());
+  if ($('#wai-bindings-json').length) {
+    let bindings = JSON.parse($('#wai-bindings-json').val());
 
     for (let binding of bindings) {
       let element = $.parseHTML(bindingElement);
-      $(element).find(".wai-input-woocommerce").val(binding[0]);
-      $(element).find(".wai-input-allegro").val(binding[1]);
-      $("#wai-bindings > tbody").append(element);
+      $(element).find('.wai-input-woocommerce').val(binding[0]);
+      $(element).find('.wai-input-allegro').val(binding[1]);
+      $('#wai-bindings > tbody').append(element);
     }
   }
 
@@ -75,18 +75,23 @@ jQuery($ => {
   });
 
   // Save bindings and submit the form
-  $("#wai-submit").click(e => {
+  $('#wai-submit').click(e => {
     e.preventDefault();
     let bindings = [];
 
-    for (let i of $("#wai-bindings > tbody").children()) {
+    for (let i of $('#wai-bindings > tbody').children()) {
       let binding = [];
-      binding.push($(i).find(".wai-input-woocommerce").val());
-      binding.push($(i).find(".wai-input-allegro").val());
+      binding.push($(i).find('.wai-input-woocommerce').val());
+      binding.push($(i).find('.wai-input-allegro').val());
       bindings.push(binding);
     }
 
-    $("#wai-bindings-json").val(JSON.stringify(bindings));
-    $("#wai-form").submit();
+    $('#wai-bindings-json').val(JSON.stringify(bindings));
+    $('#wai-form').submit();
+  });
+
+  $('#wai-clean-log').click(e => {
+    e.preventDefault();
+    location.href = addParamToUrl('action', 'clean-log-file');
   });
 });

@@ -7,6 +7,8 @@
 
 declare(strict_types = 1);
 
+define('LOGFILE', plugin_dir_path(__FILE__) . 'wai-debug.log');
+
 // If you want to use Allegro Sandbox instead of Allegro,
 // uncomment the line below
 define('USE_ALLEGRO_SANDBOX', TRUE);
@@ -83,7 +85,7 @@ if (in_array('woocommerce/woocommerce.php',
         error_log(
           $message . PHP_EOL,
           3,
-          plugin_dir_path(__FILE__) . 'wai-debug.log'
+          LOGFILE
         );
       }
 
@@ -552,6 +554,9 @@ if (in_array('woocommerce/woocommerce.php',
           $refresh = TRUE;
 
           switch ($_GET['action']) {
+            case 'clean-log-file':
+              @unlink(LOGFILE);
+              break;
             case 'link-allegro':
               $this->linkToAllegro();
               $refresh = FALSE;
@@ -766,12 +771,12 @@ if (in_array('woocommerce/woocommerce.php',
           <?php
               break;
             case 'logs':
-              // TODO: add "Clean log file" button
           ?>
           <h2>Logs</h2>
           <p>Debug info</p>
-          <textarea id="wai-logs" rows="10" readonly><?php echo @file_get_contents(plugin_dir_path(__FILE__) . 'wai-debug.log'); ?></textarea>
-          <a href="<?php echo plugins_url('wai-debug.log', __FILE__); ?>" class="button button-primary" download>Download log file</a>
+          <textarea id="wai-logs" rows="10" readonly><?php echo @file_get_contents(LOGFILE); ?></textarea>
+          <a href="<?php echo LOGFILE; ?>" class="button button-primary" download>Download log file</a>
+          <button class="button button-secondary" id="wai-clean-log">Clean log file</button>
           <?php
               break;
           }
