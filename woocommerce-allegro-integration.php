@@ -46,6 +46,7 @@ if (in_array('woocommerce/woocommerce.php',
         add_action('admin_init', array($this, 'createSettings'));
         add_action('admin_menu', array($this, 'createMenu'));
         add_action('admin_enqueue_scripts', array($this, 'loadStylesScripts'));
+        add_action('init', array($this, 'configureCronAndTokenRefreshing'));
 
         if (defined('USE_ALLEGRO_SANDBOX')) {
           $this->allegroUrl = 'https://allegro.pl.allegrosandbox.pl';
@@ -231,6 +232,19 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
+       * Function converting a DateInterval object into seconds
+       *
+       * This function converts only hours, minutes and seconds into seconds
+       * (not years, months etc.)
+       *
+       * @param DateTinterval $interval DateInterval object to convert
+       * @return int The result of the conversion
+       */
+      private function dateIntervalToSeconds(DateInterval $interval): int {
+        return $interval->h * 3600 + $interval->i * 60 + $interval->s;
+      }
+
+      /**
        * Function getting Allegro token
        */
       private function getToken(): void {
@@ -389,6 +403,10 @@ if (in_array('woocommerce/woocommerce.php',
         $decodedRes = json_decode($res['response']);
         update_option('wai_token', $decodedRes->access_token);
         update_option('wai_refresh_token', $decodedRes->refresh_token);
+        update_option('wai_token_expiry', array(
+          'expires_in' => $decodedRes->expires_in,
+          'current_datetime' => new DateTime()
+        ));
 
         $this->log(
           new DateTime(),
@@ -491,6 +509,10 @@ if (in_array('woocommerce/woocommerce.php',
         $decodedRes = json_decode($res['response']);
         update_option('wai_token', $decodedRes->access_token);
         update_option('wai_refresh_token', $decodedRes->refresh_token);
+        update_option('wai_token_expiry', array(
+          'expires_in' => $decodedRes->expires_in,
+          'current_datetime' => new DateTime()
+        ));
 
         $this->log(
           new DateTime(),
@@ -649,6 +671,34 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
+       * Function configuring the cron, refreshing the token and doing many
+       * other tasks
+       */
+      public function configureCronAndTokenRefreshing(): void {
+        $option = get_option('wai_token_expiry');
+
+        if (!empty($option)) {
+          $difference = $option['current_datetime']->diff(new DateTime());
+          $difference = $this->dateIntervalToSeconds($difference);
+
+          if ($difference >= $option['expires_in']) {
+            $this->refreshToken();
+            delete_option('wai_token_expiry');
+          }
+        }
+
+        if (!get_option('wai_token')) {
+          add_option('wai_token');
+        }
+        if (!get_option('wai_refresh_token')) {
+          add_option('wai_refresh_token');
+        }
+        if (!get_option('wai_token_expires_in')) {
+          add_option('wai_token_expires_in');
+        }
+      }
+
+      /**
        * Function creating plugin's settings
        */
       public function createSettings(): void {
@@ -676,8 +726,9 @@ if (in_array('woocommerce/woocommerce.php',
         }
 
         if (!empty(get_option('wai_delayed_settings_error')) &&
-            !defined('DONT_SHOW_SETTINGS_ERROR')) {
-          // TODO: Add checking condition if current site is the WAI's one
+            !defined('DONT_SHOW_SETTINGS_ERROR') &&
+            $_SERVER['REQUEST_URI'] === '/wp-admin/admin.php' &&
+            $_GET['page'] === 'wai') {
           $option = get_option('wai_delayed_settings_error');
 
           add_settings_error(
@@ -688,13 +739,6 @@ if (in_array('woocommerce/woocommerce.php',
           );
 
           delete_option('wai_delayed_settings_error');
-        }
-
-        if (!get_option('wai_token')) {
-          add_option('wai_token');
-        }
-        if (!get_option('wai_refresh_token')) {
-          add_option('wai_refresh_token');
         }
 
         register_setting('wai', 'wai_options');
