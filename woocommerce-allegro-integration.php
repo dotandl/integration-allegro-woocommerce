@@ -80,7 +80,7 @@ if (in_array('woocommerce/woocommerce.php',
             $messageType !== 'ERROR')
           $messageType = 'INFO';
 
-        $message = "[$time] ($messageType) $funcName \"$message\"";
+        $message = "[$time] ($messageType) $funcName '$message'";
 
         error_log(
           $message . PHP_EOL,
@@ -464,7 +464,7 @@ if (in_array('woocommerce/woocommerce.php',
           "?grant_type=refresh_token&refresh_token=$refreshToken" .
           "&redirect_uri=$redirectUri";
 
-        $headers = array('Authorization: Basic ' . $encodedCredentials);
+        $headers = array("Authorization: Basic $encodedCredentials");
 
         $res = $this->sendRequest($url, 'POST', $headers);
 
@@ -473,7 +473,7 @@ if (in_array('woocommerce/woocommerce.php',
             new DateTime(),
             __METHOD__,
             "Something went wrong: http_code=\"{$res['http_code']}\" " .
-              "error={$res['error']}",
+              "error=\"{$res['error']}\"",
             'ERROR'
           );
 
@@ -544,6 +544,111 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
+       * Function changing the quantity of the product in Allegro
+       *
+       * This function gets the product from the Allegro API, changes its
+       * quantity and updates this product
+       *
+       * @param string $id ID of the product to change the quantity for
+       * @param int $quantity Target quantity of the product
+       */
+      private function changeQuantityAllegro(
+        string $id,
+        int $quantity
+      ): void {
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          "Started changing the quantity of product with ID \"$id\" ".
+            "to \"$quantity\" in Allegro"
+        );
+
+        if (empty(get_option('wai_token'))) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'Token does not exist or is empty',
+            'ERROR'
+          );
+
+          return;
+        }
+
+        $url = "$this->allegroApiUrl/sale/offers/$id";
+
+        $headers = array(
+          'Accept: application/vnd.allegro.public.v1+json',
+          'Authorization: Bearer ' . get_option('wai_token')
+        );
+
+        $res = $this->sendRequest($url, 'GET', $headers);
+
+        if ($res['http_code'] === 404) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Product with ID \"$id\" not found",
+            'ERROR'
+          );
+
+          return;
+        } else if ($res['http_code'] !== 200 || !empty($res['error'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Something went wrong: http_code=\"{$res['http_code']}\" " .
+              "error=\"{$res['error']}\"",
+            'ERROR'
+          );
+
+          return;
+        }
+
+        $jsonRes = json_decode($res['response']);
+        $jsonRes->stock->available = $quantity;
+
+        $url = "$this->allegroApiUrl/sale/offers/$id";
+
+        $headers = array(
+          'Accept: application/vnd.allegro.public.v1+json',
+          'Content-Type: application/vnd.allegro.public.v1+json',
+          'Authorization: Bearer ' . get_option('wai_token')
+        );
+
+        $body = json_encode($jsonRes);
+
+        $res = $this->sendRequest($url, 'PUT', $headers, $body);
+
+        if ($res['http_code'] === 404) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Product with ID \"$id\" not found",
+            'ERROR'
+          );
+
+          return;
+        } else if ($res['http_code'] !== 200 || !empty($res['error'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Something went wrong: http_code=\"{$res['http_code']}\" " .
+              "error=\"{$res['error']}\"",
+            'ERROR'
+          );
+
+          return;
+        }
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'Quantity changed successfully',
+          'SUCCESS'
+        );
+      }
+
+      /**
        * Function creating plugin's settings
        */
       public function createSettings(): void {
@@ -572,6 +677,7 @@ if (in_array('woocommerce/woocommerce.php',
 
         if (!empty(get_option('wai_delayed_settings_error')) &&
             !defined('DONT_SHOW_SETTINGS_ERROR')) {
+          // TODO: Add checking condition if current site is the WAI's one
           $option = get_option('wai_delayed_settings_error');
 
           add_settings_error(
