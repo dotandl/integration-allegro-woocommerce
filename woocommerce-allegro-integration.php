@@ -23,12 +23,30 @@ if (in_array('woocommerce/woocommerce.php',
      * Main WAI's class
      */
     class WAI {
+      /**
+       * Field storing info about selected tab in the menu
+       */
       private $activeTab;
 
+      /**
+       * Base URL to either Allegro or Allegro Sanbox
+       */
       private $allegroUrl;
+
+      /**
+       * Base URL to either Allegro API or Allegro Sanbox API
+       */
       private $allegroApiUrl;
+
+      /**
+       * Base URL to either Allegro Apps Management Menu or
+       * Allegro Sanbox Apps Management Menu
+       */
       private $allegroAppsUrl;
 
+      /**
+       * Default constructor
+       */
       public function __construct() {
         // Register styles & scripts
         wp_register_style(
@@ -171,7 +189,7 @@ if (in_array('woocommerce/woocommerce.php',
       /**
        * Function encoding the string for PKCE validation
        *
-       * This function converts strings to an ASCII string, generates
+       * This function converts string to an ASCII string, generates
        * an SHA256 hash from it and encodes it to base64 string.
        *
        * @param string $str String to encode
@@ -196,7 +214,7 @@ if (in_array('woocommerce/woocommerce.php',
        * @param string $reqType Request type (e.g. GET, POST, PUT, DELETE)
        * @param array $headers Additional HTTP request headers
        * @param string $body Additional request body
-       * @return array Response and HTTP code
+       * @return array Response, HTTP code and error
        */
       private function sendRequest(
         string $url,
@@ -671,8 +689,49 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
+       * Function changing the quantity of the product in WooCommerce
+       *
+       * This function gets the product from WooCommerce, changes its
+       * quantity and updates this product
+       *
+       * @param string $id ID of the product to change the quantity for
+       * @param int $quantity Target quantity of the product
+       */
+      private function changeQuantityWooCommerce(int $id, int $quantity): void {
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          "Started changing the quantity of product with ID \"$id\" ".
+            "to \"$quantity\" in WooCommerce"
+        );
+
+        $product = wc_get_product($id);
+
+        if ($product === NULL) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Product with ID \"$id\" not found",
+            'ERROR'
+          );
+
+          return;
+        }
+
+        $product->set_stock_quantity($quantity);
+        $product->save();
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          "Quantity changed successfully",
+          'SUCCESS'
+        );
+      }
+
+      /**
        * Function configuring the cron, refreshing the token and doing many
-       * other tasks
+       * other things
        */
       public function configureCronAndTokenRefreshing(): void {
         $option = get_option('wai_token_expiry');
