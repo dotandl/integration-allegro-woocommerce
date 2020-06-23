@@ -1,7 +1,9 @@
 'use strict';
 
+// TODO: Cast WooCommerce ID to number
+
 /**
- * One binding of all bindings table
+ * One binding of bindings table
  */
 const bindingElement = '<tr>' +
   '<th><input type="number" class="wai-input wai-input-woocommerce" placeholder="WooCommerce"></th>' +
@@ -13,15 +15,14 @@ const bindingElement = '<tr>' +
  *
  * This function gets current URL and checks whether it has already got params
  * and adds new param depends on that info. If URL has fragment
- * identifier ("#" and ID of element) it will be removec.
+ * identifier ("#" and ID of element) it will be removed.
  *
- * @param string key Param's key
- * @param string value Param's value
- * @returns string Final URL
+ * @param {string} key Param's key
+ * @param {string} value Param's value
+ * @returns {string} Final URL
  */
 function addParamToUrl(key, value) {
   let url = location.href;
-
   url = url.split('#')[0];
 
   if (url.includes('?'))
@@ -67,6 +68,11 @@ jQuery($ => {
   $('#wai-bindings-remove').click(e => {
     e.preventDefault();
     $('#wai-bindings > tbody').children().last().remove();
+  });
+
+  $('#wai-sync-woocommerce-allegro').click(e => {
+    e.preventDefault();
+    location.href = addParamToUrl('action', 'sync-woocommerce-allegro');
   });
 
   $('#wai-link-allegro').click(e => {

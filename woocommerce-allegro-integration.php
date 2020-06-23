@@ -5,6 +5,8 @@
  * Version:     1.0.0
  */
 
+// TODO: Make a few functions return a bool
+
 declare(strict_types = 1);
 
 define('LOGFILE', plugin_dir_path(__FILE__) . 'wai-debug.log');
@@ -730,6 +732,70 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
+       * Function syncing product's quantity from WooCommerce to Allegro
+       *
+       * @param array $binding Binding between products in WooCommerce
+       *  and Allegro
+       */
+      public function syncWooCommerceAllegro(array $binding) {
+        $this->log(new DateTime(), __METHOD__, 'Started syncing');
+
+        // get_post_status - check if product exists
+        if (!get_post_status($binding[0])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Product with ID \"{$binding[0]}\" not found",
+            'ERROR'
+          );
+
+          return;
+        }
+
+        $product = wc_get_product($binding[0]);
+        $this->changeQuantityAllegro(
+          $binding[1],
+          $product->get_stock_quantity()
+        );
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'Products synced successfully',
+          'SUCCESS'
+        );
+      }
+
+      /**
+       * Function syncing all products' quantity
+       */
+      private function syncAllWooCommerceAllegro(): void {
+        define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+
+        $this->log(new DateTime(), __METHOD__, 'Started syncing all products');
+        $options = get_option('wai_options');
+
+        if (!empty($options['wai_bindings_field'])) {
+          foreach (json_decode($options['wai_bindings_field']) as $binding)
+            $this->syncWooCommerceAllegro($binding);
+        }
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'All products synced successfully',
+          'SUCCESS'
+        );
+
+        add_option('wai_delayed_settings_error', array(
+          'setting' => 'wai',
+          'code' => 'wai_error',
+          'message' => 'Products synced successfully',
+          'type' => 'success'
+        ));
+      }
+
+      /**
        * Function configuring the cron, refreshing the token and doing many
        * other things
        */
@@ -740,10 +806,8 @@ if (in_array('woocommerce/woocommerce.php',
           $difference = $option['current_datetime']->diff(new DateTime());
           $difference = $this->dateIntervalToSeconds($difference);
 
-          if ($difference >= $option['expires_in']) {
+          if ($difference >= $option['expires_in'])
             $this->refreshToken();
-            delete_option('wai_token_expiry');
-          }
         }
 
         if (!get_option('wai_token')) {
@@ -758,46 +822,52 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
-       * Function creating plugin's settings
+       * Function creating plugin's settings and doing many other things
        */
       public function createSettings(): void {
-        if (isset($_GET['code']))
-          $this->getToken();
+        // Check if current page is the WAI's one
+        // strtok - explode and get first element
+        if (strtok($_SERVER["REQUEST_URI"], '?') === '/wp-admin/admin.php' &&
+            $_GET['page'] === 'wai') {
+          if (isset($_GET['code']))
+            $this->getToken();
 
-        if (isset($_GET['action'])) {
-          $refresh = TRUE;
+          if (isset($_GET['action'])) {
+            $refresh = TRUE;
 
-          switch ($_GET['action']) {
-            case 'clean-log-file':
-              @unlink(LOGFILE);
-              break;
-            case 'link-allegro':
-              $this->linkToAllegro();
-              $refresh = FALSE;
-              break;
-            default:
-              $refresh = FALSE;
-              break;
+            switch ($_GET['action']) {
+              case 'sync-woocommerce-allegro':
+                $this->syncAllWooCommerceAllegro();
+                break;
+              case 'clean-log-file':
+                @unlink(LOGFILE);
+                break;
+              case 'link-allegro':
+                $this->linkToAllegro();
+                $refresh = FALSE;
+                break;
+              default:
+                $refresh = FALSE;
+                break;
+            }
+
+            if ($refresh === TRUE)
+              header("Location: {$this->getCleanUrl()}");
           }
 
-          if ($refresh === TRUE)
-            header("Location: {$this->getCleanUrl()}");
-        }
+          if (!empty(get_option('wai_delayed_settings_error')) &&
+              !defined('DONT_SHOW_SETTINGS_ERROR')) {
+            $option = get_option('wai_delayed_settings_error');
 
-        if (!empty(get_option('wai_delayed_settings_error')) &&
-            !defined('DONT_SHOW_SETTINGS_ERROR') &&
-            $_SERVER['REQUEST_URI'] === '/wp-admin/admin.php' &&
-            $_GET['page'] === 'wai') {
-          $option = get_option('wai_delayed_settings_error');
+            add_settings_error(
+              $option['setting'],
+              $option['code'],
+              $option['message'],
+              $option['type']
+            );
 
-          add_settings_error(
-            $option['setting'],
-            $option['code'],
-            $option['message'],
-            $option['type']
-          );
-
-          delete_option('wai_delayed_settings_error');
+            delete_option('wai_delayed_settings_error');
+          }
         }
 
         register_setting('wai', 'wai_options');
@@ -971,10 +1041,10 @@ if (in_array('woocommerce/woocommerce.php',
               <button id="wai-link-allegro" class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Link to Allegro</button>
             </p>
             <p>
-              <button class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Sync WooCommerce -> Allegro</button>
+              <button id="wai-sync-woocommerce-allegro" class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Sync WooCommerce -> Allegro</button>
             </p>
             <p>
-              <button class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Sync Allegro -> WooCommerce</button>
+              <button id="wai-sync-allegro-woocommerce" class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Sync Allegro -> WooCommerce</button>
             </p>
           </form>
           <?php
