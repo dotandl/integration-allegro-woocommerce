@@ -67,7 +67,10 @@ if (in_array('woocommerce/woocommerce.php',
         add_action('admin_menu', array($this, 'createMenu'));
         add_action('admin_enqueue_scripts', array($this, 'loadStylesScripts'));
         add_action('init', array($this, 'configureCronAndTokenRefreshing'));
+        add_action('woocommerce_thankyou',
+          array($this, 'hookNewOrderWooCommerce'));
 
+        // Use either Allegro or Allegro Sandbox
         if (defined('USE_ALLEGRO_SANDBOX')) {
           $this->allegroUrl = 'https://allegro.pl.allegrosandbox.pl';
           $this->allegroApiUrl = 'https://api.allegro.pl.allegrosandbox.pl';
@@ -597,7 +600,7 @@ if (in_array('woocommerce/woocommerce.php',
       private function changeQuantityAllegro(
         string $id,
         int $quantity
-      ): void {
+      ): bool {
         $this->log(
           new DateTime(),
           __METHOD__,
@@ -613,7 +616,7 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          return;
+          return FALSE;
         }
 
         $url = "$this->allegroApiUrl/sale/offers/$id";
@@ -633,7 +636,7 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          return;
+          return FALSE;
         } else if ($res['http_code'] !== 200 || !empty($res['error'])) {
           $this->log(
             new DateTime(),
@@ -643,7 +646,7 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          return;
+          return FALSE;
         }
 
         $jsonRes = json_decode($res['response']);
@@ -669,7 +672,7 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          return;
+          return FALSE;
         } else if ($res['http_code'] !== 200 || !empty($res['error'])) {
           $this->log(
             new DateTime(),
@@ -679,7 +682,7 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          return;
+          return FALSE;
         }
 
         $this->log(
@@ -688,6 +691,8 @@ if (in_array('woocommerce/woocommerce.php',
           'Quantity changed successfully',
           'SUCCESS'
         );
+
+        return TRUE;
       }
 
       /**
@@ -737,7 +742,7 @@ if (in_array('woocommerce/woocommerce.php',
        * @param array $binding Binding between products in WooCommerce
        *  and Allegro
        */
-      public function syncWooCommerceAllegro(array $binding) {
+      private function syncWooCommerceAllegro(array $binding): bool {
         $this->log(new DateTime(), __METHOD__, 'Started syncing');
 
         // get_post_status - check if product exists
@@ -745,18 +750,30 @@ if (in_array('woocommerce/woocommerce.php',
           $this->log(
             new DateTime(),
             __METHOD__,
-            "Product with ID \"{$binding[0]}\" not found",
+            "Product with ID \"{$binding[0]}\" not found in WooCommerce",
             'ERROR'
           );
 
-          return;
+          return FALSE;
         }
 
         $product = wc_get_product($binding[0]);
-        $this->changeQuantityAllegro(
+        $res = $this->changeQuantityAllegro(
           $binding[1],
           $product->get_stock_quantity()
         );
+
+        if (!$res) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Could not change quantity of product with ID \"{$binding[1]}\" " .
+              'in Allegro',
+            'ERROR'
+          );
+
+          return FALSE;
+        }
 
         $this->log(
           new DateTime(),
@@ -764,6 +781,8 @@ if (in_array('woocommerce/woocommerce.php',
           'Products synced successfully',
           'SUCCESS'
         );
+
+        return TRUE;
       }
 
       /**
@@ -776,8 +795,29 @@ if (in_array('woocommerce/woocommerce.php',
         $options = get_option('wai_options');
 
         if (!empty($options['wai_bindings_field'])) {
-          foreach (json_decode($options['wai_bindings_field']) as $binding)
-            $this->syncWooCommerceAllegro($binding);
+          foreach (json_decode($options['wai_bindings_field']) as $binding) {
+            $res = $this->syncWooCommerceAllegro($binding);
+
+            if (!$res) {
+              $this->log(
+                new DateTime(),
+                __METHOD__,
+                "Could not sync products with IDs \"{$binding[0]}\" " .
+                  "(WooCommerce) and \"{$binding[1]}\" (Allegro)",
+                'ERROR'
+              );
+
+              add_option('wai_delayed_settings_error', array(
+                'setting' => 'wai',
+                'code' => 'wai_error',
+                'message' => 'Could not sync products. See the logs for more ' .
+                  'information',
+                'type' => 'success'
+              ));
+
+              return;
+            }
+          }
         }
 
         $this->log(
@@ -793,6 +833,62 @@ if (in_array('woocommerce/woocommerce.php',
           'message' => 'Products synced successfully',
           'type' => 'success'
         ));
+      }
+
+      /**
+       * Function processing new order in WooCommerce (syncing quantity from
+       *  WooCommerce to Allegro for ordered products)
+       *
+       * @param int $id Order ID
+       */
+      public function hookNewOrderWooCommerce(int $id): void {
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'Started processing new order in WooCommerce'
+        );
+
+        $order = wc_get_order($id);
+        $options = get_option('wai_options');
+
+        if (empty($order)) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Order with ID \"$id\" not found",
+            'ERROR'
+          );
+
+          return;
+        }
+        // It isn't necessary to check if array with bindings is empty
+
+        foreach (json_decode($options['wai_bindings_field']) as $binding) {
+          foreach ($order->get_items() as $item) {
+            if ($item['product_id'] === $binding[0]) {
+              $res = $this->syncWooCommerceAllegro($binding);
+
+              if (!$res) {
+                $this->log(
+                  new DateTime(),
+                  __METHOD__,
+                  "Could not sync products with IDs \"{$binding[0]}\" " .
+                    "(WooCommerce) and \"{$binding[1]}\" (Allegro)",
+                  'ERROR'
+                );
+
+                return;
+              }
+            }
+          }
+        }
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'Order processed successfully',
+          'SUCCESS'
+        );
       }
 
       /**

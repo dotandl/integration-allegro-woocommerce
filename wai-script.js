@@ -87,7 +87,7 @@ jQuery($ => {
 
     for (let i of $('#wai-bindings > tbody').children()) {
       let binding = [];
-      binding.push($(i).find('.wai-input-woocommerce').val());
+      binding.push(Number($(i).find('.wai-input-woocommerce').val()));
       binding.push($(i).find('.wai-input-allegro').val());
       bindings.push(binding);
     }
