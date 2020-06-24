@@ -5,8 +5,6 @@
  * Version:     1.0.0
  */
 
-// TODO: Make a few functions return a bool
-
 declare(strict_types = 1);
 
 define('LOGFILE', plugin_dir_path(__FILE__) . 'wai-debug.log');
@@ -257,14 +255,15 @@ if (in_array('woocommerce/woocommerce.php',
       /**
        * Function converting a DateInterval object into seconds
        *
-       * This function converts only hours, minutes and seconds into seconds
-       * (not years, months etc.)
+       * This function converts only days, hours, minutes and seconds
+       * into seconds (not years, months etc.)
        *
        * @param DateTinterval $interval DateInterval object to convert
        * @return int The result of the conversion
        */
       private function dateIntervalToSeconds(DateInterval $interval): int {
-        return $interval->h * 3600 + $interval->i * 60 + $interval->s;
+        return $interval->d * 86400 + $interval->h * 3600 + $interval->i * 60
+          + $interval->s;
       }
 
       /**
@@ -704,7 +703,7 @@ if (in_array('woocommerce/woocommerce.php',
        * @param string $id ID of the product to change the quantity for
        * @param int $quantity Target quantity of the product
        */
-      private function changeQuantityWooCommerce(int $id, int $quantity): void {
+      private function changeQuantityWooCommerce(int $id, int $quantity): bool {
         $this->log(
           new DateTime(),
           __METHOD__,
@@ -722,7 +721,7 @@ if (in_array('woocommerce/woocommerce.php',
             'ERROR'
           );
 
-          return;
+          return FALSE;
         }
 
         $product->set_stock_quantity($quantity);
@@ -734,6 +733,8 @@ if (in_array('woocommerce/woocommerce.php',
           "Quantity changed successfully",
           'SUCCESS'
         );
+
+        return TRUE;
       }
 
       /**
@@ -786,7 +787,73 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       /**
-       * Function syncing all products' quantity
+       * Function syncing product's quantity from Allegro to WooCommerce
+       *
+       * @param array $binding Binding between products in WooCommerce
+       *  and Allegro
+       */
+      private function syncAllegroWooCommerce(array $binding): bool {
+        $this->log(new DateTime(), __METHOD__, 'Started syncing');
+
+        $options = get_option('wai_options');
+
+        $url = "$this->allegroApiUrl/sale/offers/{$binding[1]}";
+        echo $url;
+        $headers = array(
+          'Authorization: Bearer ' . get_option('wai_token'),
+          'Accept: application/vnd.allegro.public.v1+json'
+        );
+
+        $res = $this->sendRequest($url, 'GET', $headers);
+
+        if ($res['http_code'] === 404) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Product with ID \"{$binding[1]}\" not found in Allegro",
+            'ERROR'
+          );
+
+          return FALSE;
+        } else if ($res['http_code'] !== 200 || !empty($res['error'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Something went wrong: http_code=\"{$res['code']}\" " .
+              "error=\"{$res['error']}\"",
+            'ERROR'
+          );
+
+          return FALSE;
+        }
+
+        $res = $this->changeQuantityWooCommerce(
+          $binding[0], json_decode($res['response'])->stock->available);
+
+        if (!$res) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Could not change quantity of product with ID \"{$binding[0]}\"" .
+              'in WooCommerce',
+            'ERROR'
+          );
+
+          return FALSE;
+        }
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'Products synced successfully',
+          'SUCCESS'
+        );
+
+        return TRUE;
+      }
+
+      /**
+       * Function syncing all products' quantity from WooCommerce to Allegro
        */
       private function syncAllWooCommerceAllegro(): void {
         define('DONT_SHOW_SETTINGS_ERROR', TRUE);
@@ -797,6 +864,56 @@ if (in_array('woocommerce/woocommerce.php',
         if (!empty($options['wai_bindings_field'])) {
           foreach (json_decode($options['wai_bindings_field']) as $binding) {
             $res = $this->syncWooCommerceAllegro($binding);
+
+            if (!$res) {
+              $this->log(
+                new DateTime(),
+                __METHOD__,
+                "Could not sync products with IDs \"{$binding[0]}\" " .
+                  "(WooCommerce) and \"{$binding[1]}\" (Allegro)",
+                'ERROR'
+              );
+
+              add_option('wai_delayed_settings_error', array(
+                'setting' => 'wai',
+                'code' => 'wai_error',
+                'message' => 'Could not sync products. See the logs for more ' .
+                  'information',
+                'type' => 'success'
+              ));
+
+              return;
+            }
+          }
+        }
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'All products synced successfully',
+          'SUCCESS'
+        );
+
+        add_option('wai_delayed_settings_error', array(
+          'setting' => 'wai',
+          'code' => 'wai_error',
+          'message' => 'Products synced successfully',
+          'type' => 'success'
+        ));
+      }
+
+      /**
+       * Function syncing all products' quantity from Allegro to WooCommerce
+       */
+      private function syncAllAllegroWooCommerce(): void {
+        define('DONT_SHOW_SETTINGS_ERROR', TRUE);
+
+        $this->log(new DateTime(), __METHOD__, 'Started syncing all products');
+        $options = get_option('wai_options');
+
+        if (!empty($options['wai_bindings_field'])) {
+          foreach (json_decode($options['wai_bindings_field']) as $binding) {
+            $res = $this->syncAllegroWooCommerce($binding);
 
             if (!$res) {
               $this->log(
@@ -932,6 +1049,9 @@ if (in_array('woocommerce/woocommerce.php',
             $refresh = TRUE;
 
             switch ($_GET['action']) {
+              case 'sync-allegro-woocommerce':
+                $this->syncAllAllegroWooCommerce();
+                break;
               case 'sync-woocommerce-allegro':
                 $this->syncAllWooCommerceAllegro();
                 break;

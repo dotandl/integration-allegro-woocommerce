@@ -1,7 +1,5 @@
 'use strict';
 
-// TODO: Cast WooCommerce ID to number
-
 /**
  * One binding of bindings table
  */
@@ -70,11 +68,19 @@ jQuery($ => {
     $('#wai-bindings > tbody').children().last().remove();
   });
 
+  // Sync WooCommerce -> Allegro
   $('#wai-sync-woocommerce-allegro').click(e => {
     e.preventDefault();
     location.href = addParamToUrl('action', 'sync-woocommerce-allegro');
   });
 
+  // Sync Allegro -> WooCommerce
+  $('#wai-sync-allegro-woocommerce').click(e => {
+    e.preventDefault();
+    location.href = addParamToUrl('action', 'sync-allegro-woocommerce');
+  });
+
+  // Link to Allegro
   $('#wai-link-allegro').click(e => {
     e.preventDefault();
     location.href = addParamToUrl('action', 'link-allegro');
