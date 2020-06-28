@@ -5,6 +5,8 @@
  * Version:     1.0.0
  */
 
+// TODO: add checking if token exists
+
 declare(strict_types = 1);
 
 define('LOGFILE', plugin_dir_path(__FILE__) . 'wai-debug.log');
@@ -1008,6 +1010,79 @@ if (in_array('woocommerce/woocommerce.php',
         );
       }
 
+      private function processNewOrdersAllegro(): void {
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'Started processing new orders in Allegro'
+        );
+
+        if (empty(get_option('wai_token'))) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'Token does not exist or is empty',
+            'ERROR'
+          );
+
+          return;
+        }
+
+        $url = "$this->allegroApiUrl/order/events";
+        $headers = array(
+          'Accept: application/vnd.allegro.public.v1+json',
+          'Authorization: Bearer ' . get_option('wai_token')
+        );
+
+        $res = $this->sendRequest($url, 'GET', $headers);
+
+        if ($res['http_code'] !== 200 || !empty($res['error'])) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            "Something went wrong: http_code=\"{$res['http_code']}\" " .
+              "error=\"{$res['error']}\"",
+            'ERROR'
+          );
+
+          return;
+        }
+
+        $options = get_option('wai_options');
+        $lastProcessed = get_option('wai_last_allegro_orders_processed');
+        $obj = json_decode($res['response']);
+
+        update_option('wai_last_allegro_orders_processed', new DateTime());
+        if (empty($lastProcessed))
+          $forceSync = TRUE;
+
+        // TODO: check if that shit works
+        foreach (json_decode($options['wai_bindings_field']) as $binding) {
+          foreach ($obj->events as $event) {
+            if ($forceSync ??
+                new DateTime($event->occurredAt) >= $lastProcessed) {
+              foreach ($event->order->lineItems as $item) {
+                if ($binding[1] === $item->offer->id) {
+                  $res = $this->syncAllegroWooCommerce($binding);
+
+                  if (!$res) {
+                    $this->log(
+                      new DateTime(),
+                      __METHOD__,
+                      "Could not sync products with IDs \"{$binding[0]}\" " .
+                        "(WooCommerce) and \"{$binding[1]}\" (Allegro)",
+                      'ERROR'
+                    );
+
+                    return;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
       /**
        * Function configuring the cron, refreshing the token and doing many
        * other things
@@ -1038,6 +1113,7 @@ if (in_array('woocommerce/woocommerce.php',
        * Function creating plugin's settings and doing many other things
        */
       public function createSettings(): void {
+        $this->processNewOrdersAllegro();
         // Check if current page is the WAI's one
         // strtok - explode and get first element
         if (strtok($_SERVER["REQUEST_URI"], '?') === '/wp-admin/admin.php' &&
