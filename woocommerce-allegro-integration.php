@@ -1056,7 +1056,6 @@ if (in_array('woocommerce/woocommerce.php',
         if (empty($lastProcessed))
           $forceSync = TRUE;
 
-        // TODO: check if that shit works
         foreach (json_decode($options['wai_bindings_field']) as $binding) {
           foreach ($obj->events as $event) {
             if ($forceSync ??
@@ -1081,6 +1080,13 @@ if (in_array('woocommerce/woocommerce.php',
             }
           }
         }
+
+        $this->log(
+          new DateTime(),
+          __METHOD__,
+          'Orders processed successfully',
+          'SUCCESS'
+        );
       }
 
       /**
@@ -1098,15 +1104,17 @@ if (in_array('woocommerce/woocommerce.php',
             $this->refreshToken();
         }
 
-        if (!get_option('wai_token')) {
+        if (!get_option('wai_token'))
           add_option('wai_token');
-        }
-        if (!get_option('wai_refresh_token')) {
+
+        if (!get_option('wai_refresh_token'))
           add_option('wai_refresh_token');
-        }
-        if (!get_option('wai_token_expires_in')) {
+
+        if (!get_option('wai_token_expires_in'))
           add_option('wai_token_expires_in');
-        }
+
+        if (!get_option('wai_last_allegro_orders_processed'))
+          add_option('wai_last_allegro_orders_processed');
       }
 
       /**
