@@ -5,8 +5,6 @@
  * Version:     1.0.0
  */
 
-// TODO: add checking if token exists
-
 declare(strict_types = 1);
 
 define('LOGFILE', plugin_dir_path(__FILE__) . 'wai-debug.log');
@@ -69,6 +67,8 @@ if (in_array('woocommerce/woocommerce.php',
         add_action('init', array($this, 'configureCronAndTokenRefreshing'));
         add_action('woocommerce_thankyou',
           array($this, 'hookNewOrderWooCommerce'));
+        add_action('wai_check_new_orders_allegro',
+          array($this, 'processNewOrderAllegro'));
 
         // Use either Allegro or Allegro Sandbox
         if (defined('USE_ALLEGRO_SANDBOX')) {
@@ -797,10 +797,20 @@ if (in_array('woocommerce/woocommerce.php',
       private function syncAllegroWooCommerce(array $binding): bool {
         $this->log(new DateTime(), __METHOD__, 'Started syncing');
 
+        if (empty(get_option('wai_token'))) {
+          $this->log(
+            new DateTime(),
+            __METHOD__,
+            'Token does not exist or is empty',
+            'ERROR'
+          );
+
+          return FALSE;
+        }
+
         $options = get_option('wai_options');
 
         $url = "$this->allegroApiUrl/sale/offers/{$binding[1]}";
-        echo $url;
         $headers = array(
           'Authorization: Bearer ' . get_option('wai_token'),
           'Accept: application/vnd.allegro.public.v1+json'
@@ -1104,6 +1114,9 @@ if (in_array('woocommerce/woocommerce.php',
             $this->refreshToken();
         }
 
+        if (!wp_next_scheduled('wai_check_new_orders_allegro'))
+          wp_schedule_event(time(), 'hourly', 'wai_check_new_orders_allegro');
+
         if (!get_option('wai_token'))
           add_option('wai_token');
 
@@ -1121,7 +1134,6 @@ if (in_array('woocommerce/woocommerce.php',
        * Function creating plugin's settings and doing many other things
        */
       public function createSettings(): void {
-        $this->processNewOrdersAllegro();
         // Check if current page is the WAI's one
         // strtok - explode and get first element
         if (strtok($_SERVER["REQUEST_URI"], '?') === '/wp-admin/admin.php' &&
