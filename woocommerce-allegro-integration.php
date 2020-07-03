@@ -1,8 +1,13 @@
 <?php
 /**
  * Plugin Name: WooCommerce & Allegro Integration
+ * Plugin URI:  https://github.com/dotandl/woocommerce-allegro-integration
  * Description: Plugin that syncs products' availability between WooCommerce and Allegro
  * Version:     1.0.0
+ * Author:      andl
+ * Author URI:  https://github.com/dotandl
+ * License:     GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 
 declare(strict_types = 1);
