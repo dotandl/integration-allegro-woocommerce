@@ -8,6 +8,8 @@
  * Author URI:  https://github.com/dotandl
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: wai
+ * Domain Path: /i18n
  */
 
 declare(strict_types = 1);
@@ -57,6 +59,7 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function __construct() {
         // Bind actions to methods
+        add_action('plugins_loaded', array($this, 'i18nLoad'));
         add_action('admin_init', array($this, 'createSettings'));
         add_action('admin_menu', array($this, 'createMenu'));
         add_action('admin_enqueue_scripts', array($this, 'loadStylesScripts'));
@@ -264,6 +267,11 @@ if (in_array('woocommerce/woocommerce.php',
           + $interval->s;
       }
 
+      public function i18nLoad(): void {
+        $langsPath = basename(dirname(__FILE__)) . '/i18n';
+        load_plugin_textdomain('wai', FALSE, $langsPath);
+      }
+
       /**
        * Function configuring the cron, refreshing the token and doing many
        * other things
@@ -351,21 +359,21 @@ if (in_array('woocommerce/woocommerce.php',
 
         add_settings_section(
           'wai_allegro',
-          'Allegro API settings',
+          esc_html__('Allegro API settings', 'wai'),
           array($this, 'displayAllegroSection'),
           'wai'
         );
 
         add_settings_section(
           'wai_bindings',
-          'Bindings',
+          esc_html__('Bindings', 'wai'),
           array($this, 'displayBindingsSection'),
           'wai'
         );
 
         add_settings_field(
           'wai_allegro_id_field',
-          'Allegro Client ID',
+          esc_html__('Allegro Client ID', 'wai'),
           array($this, 'displayAllegroIDField'),
           'wai',
           'wai_allegro'
@@ -373,7 +381,7 @@ if (in_array('woocommerce/woocommerce.php',
 
         add_settings_field(
           'wai_allegro_secret_field',
-          'Allegro Client Secret',
+          esc_html__('Allegro Client Secret', 'wai'),
           array($this, 'displayAllegroSecretField'),
           'wai',
           'wai_allegro'
@@ -381,7 +389,7 @@ if (in_array('woocommerce/woocommerce.php',
 
         add_settings_field(
           'wai_bindings_field',
-          'WooCommerce <-> Allegro Bindings',
+          esc_html__('WooCommerce <-> Allegro Bindings', 'wai'),
           array($this, 'displayBindingsField'),
           'wai',
           'wai_bindings'
@@ -393,7 +401,16 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayAllegroSection(): void {
         ?>
-        <p>Go to <a href="<?php echo $this->allegroAppsUrl; ?>" target="_blank">apps.developer.allegro.pl</a> and create new web app. In "Redirect URI" type <code><?php echo $this->getCleanUrl(); ?></code>. Then copy Client ID & Secret and paste them here.</p>
+        <p>
+          <?php
+          printf(
+            wp_kses(
+              __('Go to <a href="%s" target="_blank">apps.developer.allegro.pl</a> and create new web app. In "Redirect URI" type <code>%s</code>. Then copy Client ID & Client Secret and paste them here.', 'wai'),
+              array('a' => array('href' => array(), 'target' => array()), 'code' => array())
+            ), $this->allegroAppsUrl, $this->getCleanUrl()
+          );
+          ?>
+        </p>
         <?php
       }
 
@@ -402,7 +419,7 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayBindingsSection(): void {
         ?>
-        <p>Get ID of product from WooCommerce and Allegro and bind them here.</p>
+        <p><?php esc_html_e('Get ID of product from WooCommerce and Allegro and bind them here.', 'wai'); ?></p>
         <?php
       }
 
@@ -425,7 +442,7 @@ if (in_array('woocommerce/woocommerce.php',
         $value = $options['wai_allegro_secret_field'];
         ?>
         <input id="wai-allegro-secret" type="password" class="wai-input" name="wai_options[wai_allegro_secret_field]" value="<?php echo $value; ?>">
-        <label for="wai-allegro-secret-toggle-visibility">Toggle visbility</label>
+        <label for="wai-allegro-secret-toggle-visibility"><?php esc_html_e('Toggle visbility', 'wai'); ?></label>
         <input type="checkbox" id="wai-allegro-secret-toggle-visibility">
         <?php
       }
@@ -441,8 +458,8 @@ if (in_array('woocommerce/woocommerce.php',
         <table id="wai-bindings">
           <thead>
             <tr>
-              <th>WooCommerce Product ID</th>
-              <th>Allegro Product ID</th>
+              <th><?php esc_html_e('WooCommerce Product ID', 'wai'); ?></th>
+              <th><?php esc_html_e('Allegro Product ID', 'wai'); ?></th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -460,8 +477,8 @@ if (in_array('woocommerce/woocommerce.php',
         $this->activeTab = $_GET['tab'];
 
         add_management_page(
-          'WooCommerce & Allegro Integration',
-          'WooCommerce & Allegro Integration',
+          __('WooCommerce & Allegro Integration', 'wai'),
+          esc_html__('WooCommerce & Allegro Integration', 'wai'),
           'manage_options',
           'wai',
           array($this, 'displayMenu')
@@ -481,7 +498,7 @@ if (in_array('woocommerce/woocommerce.php',
           add_settings_error(
             'wai',
             'wai_error',
-            'Settings saved',
+            __esc_html('Settings saved', 'wai'),
             'success'
           );
 
@@ -489,10 +506,10 @@ if (in_array('woocommerce/woocommerce.php',
 
         ?>
         <div class="wrap">
-          <h1>WooCommerce & Allegro Integration</h1>
+          <h1><?php esc_html_e('WooCommerce & Allegro Integration', 'wai'); ?></h1>
           <h2 class="nav-tab-wrapper">
-            <a href="?page=wai&tab=settings" class="nav-tab <?php echo empty($this->activeTab) || $this->activeTab === 'settings' ? 'nav-tab-active' : '';?>">Settings</a>
-            <a href="?page=wai&tab=logs" class="nav-tab <?php echo $this->activeTab === 'logs' ? 'nav-tab-active' : '';?>">Logs</a>
+            <a href="?page=wai&tab=settings" class="nav-tab <?php echo empty($this->activeTab) || $this->activeTab === 'settings' ? 'nav-tab-active' : '';?>"><?php esc_html_e('Settings', 'wai'); ?></a>
+            <a href="?page=wai&tab=logs" class="nav-tab <?php echo $this->activeTab === 'logs' ? 'nav-tab-active' : '';?>"><?php esc_html_e('Logs', 'wai'); ?></a>
           </h2>
           <?php
           // Check which tab is active now
@@ -506,7 +523,7 @@ if (in_array('woocommerce/woocommerce.php',
           do_settings_sections('wai');
           ?>
             <p>
-              <button id="wai-submit" class="button button-primary">Save settings</button>
+              <button id="wai-submit" class="button button-primary"><?php esc_html_e('Save settings', 'wai'); ?></button>
           <?php
           if (empty($options['wai_allegro_id_field']) ||
               empty($options['wai_allegro_secret_field'])) {
@@ -515,24 +532,24 @@ if (in_array('woocommerce/woocommerce.php',
             $btnDisabled = FALSE;
           }
           ?>
-              <button id="wai-link-allegro" class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Link to Allegro</button>
+              <button id="wai-link-allegro" class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>><?php esc_html_e('Link to Allegro', 'wai'); ?></button>
             </p>
             <p>
-              <button id="wai-sync-woocommerce-allegro" class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Sync WooCommerce -> Allegro</button>
+              <button id="wai-sync-woocommerce-allegro" class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>><?php esc_html_e('Sync WooCommerce -> Allegro', 'wai'); ?></button>
             </p>
             <p>
-              <button id="wai-sync-allegro-woocommerce" class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>>Sync Allegro -> WooCommerce</button>
+              <button id="wai-sync-allegro-woocommerce" class="button button-secondary" <?php echo $btnDisabled ? 'disabled' : '' ?>><?php esc_html_e('Sync Allegro -> WooCommerce', 'wai'); ?></button>
             </p>
           </form>
           <?php
               break;
             case 'logs':
           ?>
-          <h2>Logs</h2>
-          <p>Debug info</p>
+          <h2><?php esc_html_e('Logs', 'wai'); ?></h2>
+          <p><?php esc_html_e('Debug info', 'wai'); ?></p>
           <textarea id="wai-logs" rows="10" readonly><?php echo @file_get_contents(LOGFILE); ?></textarea>
-          <a href="<?php echo LOGFILE; ?>" class="button button-primary" download>Download log file</a>
-          <button class="button button-secondary" id="wai-clean-log">Clean log file</button>
+          <a href="<?php echo LOGFILE; ?>" class="button button-primary" download><?php esc_html_e('Download log file', 'wai'); ?></a>
+          <button class="button button-secondary" id="wai-clean-log"><?php esc_html_e('Clean log file', 'wai'); ?></button>
           <?php
               break;
           }

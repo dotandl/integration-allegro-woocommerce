@@ -6,6 +6,9 @@ defined('ABSPATH') or die('Error: Plugin has been run outside of WordPress');
 if (in_array('woocommerce/woocommerce.php',
   apply_filters('active_plugins', get_option('active_plugins')))) {
   if (!trait_exists('WAISync')) {
+    /*
+     * Trait belonging to the WAI class that syncs products
+     */
     trait WAISync {
       /**
        * Function getting Allegro token
@@ -26,8 +29,8 @@ if (in_array('woocommerce/woocommerce.php',
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
-            'message' => 'Could not link to Allegro. ' .
-              'See the logs for more information',
+            'message' => esc_html__('Could not link to Allegro. ' .
+              'See the logs for more information', 'wai'),
             'type' => 'error'
           ));
 
@@ -45,8 +48,8 @@ if (in_array('woocommerce/woocommerce.php',
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
-            'message' => 'Could not link to Allegro. ' .
-              'See the logs for more information',
+            'message' => esc_html__('Could not link to Allegro. ' .
+              'See the logs for more information', 'wai'),
             'type' => 'error'
           ));
 
@@ -64,8 +67,8 @@ if (in_array('woocommerce/woocommerce.php',
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
-            'message' => 'Could not link to Allegro. ' .
-              'See the logs for more information',
+            'message' => esc_html__('Could not link to Allegro. ' .
+              'See the logs for more information', 'wai'),
             'type' => 'error'
           ));
 
@@ -83,8 +86,8 @@ if (in_array('woocommerce/woocommerce.php',
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
-            'message' => 'Could not link to Allegro. ' .
-              'See the logs for more information',
+            'message' => esc_html__('Could not link to Allegro. ' .
+              'See the logs for more information', 'wai'),
             'type' => 'error'
           ));
 
@@ -105,8 +108,8 @@ if (in_array('woocommerce/woocommerce.php',
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
-            'message' => 'Could not link to Allegro. ' .
-              'See the logs for more information',
+            'message' => esc_html__('Could not link to Allegro. ' .
+              'See the logs for more information', 'wai'),
             'type' => 'error'
           ));
 
@@ -123,6 +126,7 @@ if (in_array('woocommerce/woocommerce.php',
             'Client ID and/or Secret does not exist or is empty',
             'ERROR'
           );
+
           goto reload;
         }
 
@@ -155,8 +159,8 @@ if (in_array('woocommerce/woocommerce.php',
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
-            'message' => 'Could not link to Allegro. ' .
-              'See the logs for more information',
+            'message' => esc_html__('Could not link to Allegro. ' .
+              'See the logs for more information', 'wai'),
             'type' => 'error'
           ));
 
@@ -181,7 +185,7 @@ if (in_array('woocommerce/woocommerce.php',
         add_option('wai_delayed_settings_error', array(
           'setting' => 'wai',
           'code' => 'wai_error',
-          'message' => 'Linked to Allegro successfully',
+          'message' => esc_html__('Linked to Allegro successfully', 'wai'),
           'type' => 'success'
         ));
 
@@ -207,8 +211,9 @@ if (in_array('woocommerce/woocommerce.php',
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
-            'message' => 'Could not refresh the token. Try to remove the app ' .
-              'from linked apps in Allegro settings and link it again.',
+            'message' => esc_html__('Could not refresh the token. Try to ' .
+             'remove the app from linked apps in Allegro settings and ' .
+             'link it again.', 'wai'),
             'type' => 'error'
           ));
 
@@ -227,8 +232,8 @@ if (in_array('woocommerce/woocommerce.php',
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
-            'message' => 'Could not refresh the token. Try to fill in ' .
-              'Client ID and/or Secret field(s)',
+            'message' => esc_html__('Could not refresh the token. Try to ' .
+              'fill in Client ID and/or Secret field(s)', 'wai'),
             'type' => 'error'
           ));
 
@@ -261,8 +266,8 @@ if (in_array('woocommerce/woocommerce.php',
           add_option('wai_delayed_settings_error', array(
             'setting' => 'wai',
             'code' => 'wai_error',
-            'message' => 'Could not refresh the token. ' .
-              'See the logs for more information',
+            'message' => esc_html__('Could not refresh the token. ' .
+              'See the logs for more information', 'wai'),
             'type' => 'error'
           ));
 
@@ -628,8 +633,8 @@ if (in_array('woocommerce/woocommerce.php',
               add_option('wai_delayed_settings_error', array(
                 'setting' => 'wai',
                 'code' => 'wai_error',
-                'message' => 'Could not sync products. See the logs for more ' .
-                  'information',
+                'message' => esc_html__('Could not sync products. See the ' .
+                  'logs for more information', 'wai'),
                 'type' => 'success'
               ));
 
@@ -648,7 +653,7 @@ if (in_array('woocommerce/woocommerce.php',
         add_option('wai_delayed_settings_error', array(
           'setting' => 'wai',
           'code' => 'wai_error',
-          'message' => 'Products synced successfully',
+          'message' => esc_html__('Products synced successfully', 'wai'),
           'type' => 'success'
         ));
       }
@@ -678,8 +683,8 @@ if (in_array('woocommerce/woocommerce.php',
               add_option('wai_delayed_settings_error', array(
                 'setting' => 'wai',
                 'code' => 'wai_error',
-                'message' => 'Could not sync products. See the logs for more ' .
-                  'information',
+                'message' => esc_html__('Could not sync products. See the logs ' .
+                  'for more information', 'wai'),
                 'type' => 'success'
               ));
 
@@ -698,7 +703,7 @@ if (in_array('woocommerce/woocommerce.php',
         add_option('wai_delayed_settings_error', array(
           'setting' => 'wai',
           'code' => 'wai_error',
-          'message' => 'Products synced successfully',
+          'message' => esc_html__('Products synced successfully', 'wai'),
           'type' => 'success'
         ));
       }

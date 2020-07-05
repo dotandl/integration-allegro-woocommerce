@@ -1,0 +1,150 @@
+# Copyright (C) 2020 andl
+# This file is distributed under the same license as the WooCommerce & Allegro Integration plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: WooCommerce & Allegro Integration 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/dotandl/woocommerce-allegro-integration/issues\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2020-07-04T22:41:36+02:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.4.0\n"
+"X-Domain: wai\n"
+
+#. Plugin Name of the plugin
+#: woocommerce-allegro-integration.php:474
+#: woocommerce-allegro-integration.php:475
+#: woocommerce-allegro-integration.php:503
+msgid "WooCommerce & Allegro Integration"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "https://github.com/dotandl/woocommerce-allegro-integration"
+msgstr ""
+
+#. Description of the plugin
+msgid "Plugin that syncs products' availability between WooCommerce and Allegro"
+msgstr ""
+
+#. Author of the plugin
+msgid "andl"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://github.com/dotandl"
+msgstr ""
+
+#: sync.php:32
+#: sync.php:51
+#: sync.php:70
+#: sync.php:89
+#: sync.php:111
+#: sync.php:162
+msgid "Could not link to Allegro. See the logs for more information"
+msgstr ""
+
+#: sync.php:188
+msgid "Linked to Allegro successfully"
+msgstr ""
+
+#: sync.php:214
+msgid "Could not refresh the token. Try to remove the app from linked apps in Allegro settings and link it again."
+msgstr ""
+
+#: sync.php:235
+msgid "Could not refresh the token. Try to fill in Client ID and/or Secret field(s)"
+msgstr ""
+
+#: sync.php:269
+msgid "Could not refresh the token. See the logs for more information"
+msgstr ""
+
+#: sync.php:636
+#: sync.php:686
+msgid "Could not sync products. See the logs for more information"
+msgstr ""
+
+#: sync.php:656
+#: sync.php:706
+msgid "Products synced successfully"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:356
+msgid "Allegro API settings"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:363
+msgid "Bindings"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:370
+msgid "Allegro Client ID"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:378
+msgid "Allegro Client Secret"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:386
+msgid "WooCommerce <-> Allegro Bindings"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:402
+msgid "Go to <a href=\"%s\" target=\"_blank\">apps.developer.allegro.pl</a> and create new web app. In \"Redirect URI\" type <code>%s</code>. Then copy Client ID & Client Secret and paste them here."
+msgstr ""
+
+#: woocommerce-allegro-integration.php:416
+msgid "Get ID of product from WooCommerce and Allegro and bind them here."
+msgstr ""
+
+#: woocommerce-allegro-integration.php:439
+msgid "Toggle visbility"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:455
+msgid "WooCommerce Product ID"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:456
+msgid "Allegro Product ID"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:505
+msgid "Settings"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:506
+#: woocommerce-allegro-integration.php:542
+msgid "Logs"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:520
+msgid "Save settings"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:529
+msgid "Link to Allegro"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:532
+msgid "Sync WooCommerce -> Allegro"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:535
+msgid "Sync Allegro -> WooCommerce"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:543
+msgid "Debug info"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:545
+msgid "Download log file"
+msgstr ""
+
+#: woocommerce-allegro-integration.php:546
+msgid "Clean log file"
+msgstr ""
