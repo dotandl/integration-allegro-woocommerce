@@ -22,7 +22,7 @@ if (in_array('woocommerce/woocommerce.php',
 
   // If you want to use Allegro Sandbox instead of Allegro,
   // uncomment the line below
-  define('USE_ALLEGRO_SANDBOX', TRUE);
+  //define('USE_ALLEGRO_SANDBOX', TRUE);
 
   require_once 'sync.php';
 
@@ -296,8 +296,8 @@ if (in_array('woocommerce/woocommerce.php',
         if (!get_option('wai_refresh_token'))
           add_option('wai_refresh_token');
 
-        if (!get_option('wai_token_expires_in'))
-          add_option('wai_token_expires_in');
+        if (!get_option('wai_token_expiry'))
+          add_option('wai_token_expiry');
 
         if (!get_option('wai_last_allegro_orders_processed'))
           add_option('wai_last_allegro_orders_processed');
@@ -311,6 +311,8 @@ if (in_array('woocommerce/woocommerce.php',
         // strtok - explode and get first element
         if (strtok($_SERVER["REQUEST_URI"], '?') === '/wp-admin/tools.php' &&
             $_GET['page'] === 'wai') {
+          $this->activeTab = $_GET['tab'];
+
           if (isset($_GET['code']))
             $this->getToken();
 
@@ -405,7 +407,8 @@ if (in_array('woocommerce/woocommerce.php',
           <?php
           printf(
             wp_kses(
-              __('Go to <a href="%s" target="_blank">apps.developer.allegro.pl</a> and create new web app. In "Redirect URI" type <code>%s</code>. Then copy Client ID & Client Secret and paste them here.', 'wai'),
+              // translators: Address the Allegro Apps page, Plugin options page's base URL
+              __('Go to <a href="%1$s" target="_blank">apps.developer.allegro.pl</a> and create new web app. In "Redirect URI" type <code>%2$s</code>. Then copy Client ID & Client Secret and paste them here.', 'wai'),
               array('a' => array('href' => array(), 'target' => array()), 'code' => array())
             ), $this->allegroAppsUrl, $this->getCleanUrl()
           );
@@ -428,7 +431,7 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayAllegroIDField(): void {
         $options = get_option('wai_options');
-        $value = $options['wai_allegro_id_field'];
+        $value = $options['wai_allegro_id_field'] ?? '';
         ?>
         <input type="text" class="wai-input" name="wai_options[wai_allegro_id_field]" value="<?php echo $value; ?>">
         <?php
@@ -439,7 +442,7 @@ if (in_array('woocommerce/woocommerce.php',
        */
       public function displayAllegroSecretField(): void {
         $options = get_option('wai_options');
-        $value = $options['wai_allegro_secret_field'];
+        $value = $options['wai_allegro_secret_field'] ?? '';
         ?>
         <input id="wai-allegro-secret" type="password" class="wai-input" name="wai_options[wai_allegro_secret_field]" value="<?php echo $value; ?>">
         <label for="wai-allegro-secret-toggle-visibility"><?php esc_html_e('Toggle visbility', 'wai'); ?></label>
@@ -474,8 +477,6 @@ if (in_array('woocommerce/woocommerce.php',
        * Function creating plugin's menu
        */
       public function createMenu(): void {
-        $this->activeTab = $_GET['tab'];
-
         add_management_page(
           __('WooCommerce & Allegro Integration', 'wai'),
           esc_html__('WooCommerce & Allegro Integration', 'wai'),
@@ -498,7 +499,7 @@ if (in_array('woocommerce/woocommerce.php',
           add_settings_error(
             'wai',
             'wai_error',
-            __esc_html('Settings saved', 'wai'),
+            esc_html__('Settings saved', 'wai'),
             'success'
           );
 
