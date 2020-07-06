@@ -105,11 +105,7 @@ if (in_array('woocommerce/woocommerce.php',
 
         $message = "[$time] ($messageType) $funcName '$message'";
 
-        error_log(
-          $message . PHP_EOL,
-          3,
-          LOGFILE
-        );
+        file_put_contents(LOGFILE, $message . PHP_EOL, FILE_APPEND);
       }
 
       /**
@@ -311,7 +307,7 @@ if (in_array('woocommerce/woocommerce.php',
         // strtok - explode and get first element
         if (strtok($_SERVER["REQUEST_URI"], '?') === '/wp-admin/tools.php' &&
             $_GET['page'] === 'wai') {
-          $this->activeTab = $_GET['tab'];
+          $this->activeTab = $_GET['tab'] ?? 'settings';
 
           if (isset($_GET['code']))
             $this->getToken();
@@ -515,7 +511,6 @@ if (in_array('woocommerce/woocommerce.php',
           <?php
           // Check which tab is active now
           switch ($this->activeTab) {
-            default:
             case 'settings':
           ?>
           <form action="options.php" method="post" id="wai-form">
