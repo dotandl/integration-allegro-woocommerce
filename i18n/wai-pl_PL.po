@@ -94,8 +94,8 @@ msgid "WooCommerce <-> Allegro Bindings"
 msgstr "Wiązania WooCommerce <-> Allegro"
 
 #: woocommerce-allegro-integration.php:402
-msgid "Go to <a href=\"%s\" target=\"_blank\">apps.developer.allegro.pl</a> and create new web app. In \"Redirect URI\" type <code>%s</code>. Then copy Client ID & Client Secret and paste them here."
-msgstr "Przejdź do <a href=\"%s\" target=\"_blank\">apps.developer.allegro.pl</a> i utwórz nową aplikację webową. W \"Adresy URI do przekierowania\" wpisz <code>%s</code>. Następnie skopiuj Client ID i Client Secret i wklej je tutaj."
+msgid "Go to <a href=\"%1$s\" target=\"_blank\">apps.developer.allegro.pl</a> and create new web app. In \"Redirect URI\" type <code>%2$s</code>. Then copy Client ID & Client Secret and paste them here."
+msgstr "Przejdź do <a href=\"%1$s\" target=\"_blank\">apps.developer.allegro.pl</a> i utwórz nową aplikację webową. W \"Adresy URI do przekierowania\" wpisz <code>%2$s</code>. Następnie skopiuj Client ID i Client Secret i wklej je tutaj."
 
 #: woocommerce-allegro-integration.php:425
 msgid "Get ID of product from WooCommerce and Allegro and bind them here."
