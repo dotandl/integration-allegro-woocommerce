@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: WooCommerce & Allegro Integration
+ * Plugin Name: WC & Allegro Integration
  * Plugin URI:  https://github.com/dotandl/woocommerce-allegro-integration
  * Description: Plugin that syncs products' availability between WooCommerce and Allegro
  * Version:     1.0.0
