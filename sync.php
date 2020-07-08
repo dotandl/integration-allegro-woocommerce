@@ -129,10 +129,11 @@ if (in_array('woocommerce/woocommerce.php',
         goto reload;
       }
 
-      $code = $_GET['code'];
+      $code = sanitize_text_field($_GET['code']);
       $redirectUri = $this->getCleanUrl();
-      $clientId = $options['waint_allegro_id_field'];
-      $clientSecret = $options['waint_allegro_secret_field'];
+      $clientId = sanitize_text_field($options['waint_allegro_id_field']);
+      $clientSecret =
+        sanitize_text_field($options['waint_allegro_secret_field']);
       $encodedCredentials = base64_encode("$clientId:$clientSecret");
 
       $codeVerifier = get_option('waint_code_verifier');
@@ -241,8 +242,9 @@ if (in_array('woocommerce/woocommerce.php',
 
       $refreshToken = get_option('waint_refresh_token');
       $redirectUri = $this->getCleanUrl();
-      $clientId = $options['waint_allegro_id_field'];
-      $clientSecret = $options['waint_allegro_secret_field'];
+      $clientId = sanitize_text_field($options['waint_allegro_id_field']);
+      $clientSecret =
+        sanitize_text_field($options['waint_allegro_secret_field']);
       $encodedCredentials = base64_encode("$clientId:$clientSecret");
 
       $url = "$this->allegroUrl/auth/oauth/token" .
@@ -309,7 +311,7 @@ if (in_array('woocommerce/woocommerce.php',
       }
 
       $redirectUri = $this->getCleanUrl();
-      $clientId = $options['waint_allegro_id_field'];
+      $clientId = sanitize_text_field($options['waint_allegro_id_field']);
       $codeVerifier = $this->generateStringForPkce();
       $codeChallenge = $this->encodeStringForPkce($codeVerifier);
       $state = bin2hex(random_bytes(128 / 8));
@@ -617,7 +619,9 @@ if (in_array('woocommerce/woocommerce.php',
       $options = get_option('waint_options');
 
       if (!empty($options['waint_bindings_field'])) {
-        foreach (json_decode($options['waint_bindings_field']) as $binding) {
+        foreach (
+          json_decode(sanitize_text_field($options['waint_bindings_field']))
+          as $binding) {
           $res = $this->syncWooCommerceAllegro($binding);
 
           if (!$res) {
@@ -667,7 +671,9 @@ if (in_array('woocommerce/woocommerce.php',
       $options = get_option('waint_options');
 
       if (!empty($options['waint_bindings_field'])) {
-        foreach (json_decode($options['waint_bindings_field']) as $binding) {
+        foreach (
+          json_decode(sanitize_text_field($options['waint_bindings_field']))
+          as $binding) {
           $res = $this->syncAllegroWooCommerce($binding);
 
           if (!$res) {
@@ -735,7 +741,9 @@ if (in_array('woocommerce/woocommerce.php',
       }
       // It isn't necessary to check if array with bindings is empty
 
-      foreach (json_decode($options['waint_bindings_field']) as $binding) {
+      foreach (
+        json_decode(sanitize_text_field($options['waint_bindings_field']))
+        as $binding) {
         foreach ($order->get_items() as $item) {
           if ($item['product_id'] === $binding[0]) {
             $res = $this->syncWooCommerceAllegro($binding);
@@ -809,7 +817,9 @@ if (in_array('woocommerce/woocommerce.php',
       if (empty($lastProcessed))
         $forceSync = TRUE;
 
-      foreach (json_decode($options['waint_bindings_field']) as $binding) {
+      foreach (
+        json_decode(sanitize_text_field($options['waint_bindings_field']))
+        as $binding) {
         foreach ($obj->events as $event) {
           if ($forceSync ??
               new DateTime($event->occurredAt) >= $lastProcessed) {

@@ -427,7 +427,7 @@ if (in_array('woocommerce/woocommerce.php',
      */
     public function displayAllegroIDField(): void {
       $options = get_option('waint_options');
-      $value = $options['waint_allegro_id_field'] ?? '';
+      $value = sanitize_text_field($options['waint_allegro_id_field']) ?? '';
       ?>
       <input type="text" class="waint-input" name="waint_options[waint_allegro_id_field]" value="<?php echo $value; ?>">
       <?php
@@ -438,7 +438,8 @@ if (in_array('woocommerce/woocommerce.php',
      */
     public function displayAllegroSecretField(): void {
       $options = get_option('waint_options');
-      $value = $options['waint_allegro_secret_field'] ?? '';
+      $value = sanitize_text_field($options['waint_allegro_secret_field'])
+        ?? '';
       ?>
       <input id="waint-allegro-secret" type="password" class="waint-input" name="waint_options[waint_allegro_secret_field]" value="<?php echo $value; ?>">
       <label for="waint-allegro-secret-toggle-visibility"><?php esc_html_e('Toggle visbility', 'waint'); ?></label>
@@ -452,7 +453,7 @@ if (in_array('woocommerce/woocommerce.php',
     public function displayBindingsField(): void {
       $options = get_option('waint_options');
       $value = !empty($options['waint_bindings_field']) ?
-        $options['waint_bindings_field'] : '[]';
+        sanitize_text_field($options['waint_bindings_field']) : '[]';
       ?>
       <table id="waint-bindings">
         <thead>
