@@ -1,41 +1,42 @@
+# Tranlation of wai.pot into Polish.
 # Copyright (C) 2020 andl
-# This file is distributed under the same license as the WooCommerce & Allegro Integration plugin.
+# This file is distributed under the same license as the Integration of Allegro and WooCommerce plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: WooCommerce & Allegro Integration 1.0.0\n"
-"Report-Msgid-Bugs-To: https://github.com/dotandl/woocommerce-allegro-integration/issues\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Project-Id-Version: Integration of Allegro and WooCommerce 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/dotandl/integration-allegro-woocommerce/issues\n"
+"Last-Translator: andl oskarzawidlak@gmail.com\n"
+"Language-Team: andl oskarzawidlak@gmail.com\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2020-07-06T15:15:07+02:00\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2020-07-06 15:26+0200\n"
 "X-Generator: WP-CLI 2.4.0\n"
-"X-Domain: wai\n"
+"X-Domain: waint\n"
 
 #. Plugin Name of the plugin
 #: woocommerce-allegro-integration.php:481
 #: woocommerce-allegro-integration.php:482
 #: woocommerce-allegro-integration.php:510
-msgid "WooCommerce & Allegro Integration"
-msgstr ""
+msgid "Integration of Allegro and WooCommerce"
+msgstr "Integracja Allegro i WooCommerce"
 
 #. Plugin URI of the plugin
-msgid "https://github.com/dotandl/woocommerce-allegro-integration"
-msgstr ""
+msgid "https://github.com/dotandl/integration-allegro-woocommerce"
+msgstr "https://github.com/dotandl/integration-allegro-woocommerce"
 
 #. Description of the plugin
 msgid "Plugin that syncs products' availability between WooCommerce and Allegro"
-msgstr ""
+msgstr "Wtyczka synchronizująca dostępność produktów pomiędzy WooCommerce a Allegro"
 
 #. Author of the plugin
 msgid "andl"
-msgstr ""
+msgstr "andl"
 
 #. Author URI of the plugin
 msgid "https://github.com/dotandl"
-msgstr ""
+msgstr "https://github.com/dotandl"
 
 #: sync.php:32
 #: sync.php:51
@@ -44,112 +45,111 @@ msgstr ""
 #: sync.php:111
 #: sync.php:162
 msgid "Could not link to Allegro. See the logs for more information"
-msgstr ""
+msgstr "Nie można było połączyć się z Allegro. Zobacz logi, aby uzyskać więcej informacji"
 
 #: sync.php:188
 msgid "Linked to Allegro successfully"
-msgstr ""
+msgstr "Połączono z Allegro z powodzeniem"
 
 #: sync.php:214
 msgid "Could not refresh the token. Try to remove the app from linked apps in Allegro settings and link it again."
-msgstr ""
+msgstr "Nie można było odświerzyć tokenu. Spróbuj usunąć aplikację z połączonych aplikacji w ustawieniach Allegro i połączyć ją ponownie."
 
 #: sync.php:235
 msgid "Could not refresh the token. Try to fill in Client ID and/or Secret field(s)"
-msgstr ""
+msgstr "Nie można było odświerzyć tokenu. Spróbuj wypełnić pola Client ID i/lub Secret"
 
 #: sync.php:269
 msgid "Could not refresh the token. See the logs for more information"
-msgstr ""
+msgstr "NIe można było odświerzyć tokenu. Zobacz logi, aby uzyskać więcej informacji"
 
 #: sync.php:636
 #: sync.php:686
 msgid "Could not sync products. See the logs for more information"
-msgstr ""
+msgstr "Nie można było zsynchronizować produktów. Zobacz logi, zby uzyskać więcej informacji"
 
 #: sync.php:656
 #: sync.php:706
 msgid "Products synced successfully"
-msgstr ""
+msgstr "Produkty zsynchronizowane z powodzeniem"
 
 #: woocommerce-allegro-integration.php:364
 msgid "Allegro API settings"
-msgstr ""
+msgstr "Ustawienia Allegro API"
 
 #: woocommerce-allegro-integration.php:371
 msgid "Bindings"
-msgstr ""
+msgstr "Wiązania"
 
 #: woocommerce-allegro-integration.php:378
 msgid "Allegro Client ID"
-msgstr ""
+msgstr "Allegro Client ID"
 
 #: woocommerce-allegro-integration.php:386
 msgid "Allegro Client Secret"
-msgstr ""
+msgstr "ALlegro Client Secret"
 
 #: woocommerce-allegro-integration.php:394
 msgid "WooCommerce <-> Allegro Bindings"
-msgstr ""
+msgstr "Wiązania WooCommerce <-> Allegro"
 
-#. translators: Address the Allegro Apps page, Plugin options page's base URL
-#: woocommerce-allegro-integration.php:411
+#: woocommerce-allegro-integration.php:402
 msgid "Go to <a href=\"%1$s\" target=\"_blank\">apps.developer.allegro.pl</a> and create new web app. In \"Redirect URI\" type <code>%2$s</code>. Then copy Client ID & Client Secret and paste them here."
-msgstr ""
+msgstr "Przejdź do <a href=\"%1$s\" target=\"_blank\">apps.developer.allegro.pl</a> i utwórz nową aplikację webową. W \"Adresy URI do przekierowania\" wpisz <code>%2$s</code>. Następnie skopiuj Client ID i Client Secret i wklej je tutaj."
 
 #: woocommerce-allegro-integration.php:425
 msgid "Get ID of product from WooCommerce and Allegro and bind them here."
-msgstr ""
+msgstr "Weź ID produktu z WooCommerce i Allegro i powiąż je tutaj."
 
 #: woocommerce-allegro-integration.php:448
 msgid "Toggle visbility"
-msgstr ""
+msgstr "Przełącz widoczność"
 
 #: woocommerce-allegro-integration.php:464
 msgid "WooCommerce Product ID"
-msgstr ""
+msgstr "ID produktu WooCommerce"
 
 #: woocommerce-allegro-integration.php:465
 msgid "Allegro Product ID"
-msgstr ""
+msgstr "ID produktu Allegro"
 
 #: woocommerce-allegro-integration.php:502
 msgid "Settings saved"
-msgstr ""
+msgstr "Ustawienia zapisane"
 
 #: woocommerce-allegro-integration.php:512
 msgid "Settings"
-msgstr ""
+msgstr "Ustawienia"
 
 #: woocommerce-allegro-integration.php:513
 #: woocommerce-allegro-integration.php:549
 msgid "Logs"
-msgstr ""
+msgstr "Logi"
 
 #: woocommerce-allegro-integration.php:527
 msgid "Save settings"
-msgstr ""
+msgstr "Zapisz ustawienia"
 
 #: woocommerce-allegro-integration.php:536
 msgid "Link to Allegro"
-msgstr ""
+msgstr "Połącz z Allegro"
 
 #: woocommerce-allegro-integration.php:539
 msgid "Sync WooCommerce -> Allegro"
-msgstr ""
+msgstr "Synchronizuj WooCommerce -> Allegro"
 
 #: woocommerce-allegro-integration.php:542
 msgid "Sync Allegro -> WooCommerce"
-msgstr ""
+msgstr "Synchronizuj Allegro -> WooCommerce"
 
 #: woocommerce-allegro-integration.php:550
 msgid "Debug info"
-msgstr ""
+msgstr "Informacje debugowania"
 
 #: woocommerce-allegro-integration.php:552
 msgid "Download log file"
-msgstr ""
+msgstr "Pobierz plik logów"
 
 #: woocommerce-allegro-integration.php:553
 msgid "Clean log file"
-msgstr ""
+msgstr "Wyczyść plik logów"

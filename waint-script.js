@@ -4,8 +4,8 @@
  * One binding of bindings table
  */
 const bindingElement = '<tr>' +
-  '<th><input type="number" class="wai-input wai-input-woocommerce" placeholder="WooCommerce"></th>' +
-  '<th><input type="text" class="wai-input wai-input-allegro" placeholder="Allegro"></th>' +
+  '<th><input type="number" class="waint-input waint-input-woocommerce" placeholder="WooCommerce"></th>' +
+  '<th><input type="text" class="waint-input waint-input-allegro" placeholder="Allegro"></th>' +
   '</tr>';
 
 /**
@@ -32,77 +32,77 @@ function addParamToUrl(key, value) {
 
 jQuery($ => {
   // If hidden bindings field has value parse it and display bindings fields
-  if ($('#wai-bindings-json').length) {
-    let bindings = JSON.parse($('#wai-bindings-json').val());
+  if ($('#waint-bindings-json').length) {
+    let bindings = JSON.parse($('#waint-bindings-json').val());
 
     for (let binding of bindings) {
       let element = $.parseHTML(bindingElement);
-      $(element).find('.wai-input-woocommerce').val(binding[0]);
-      $(element).find('.wai-input-allegro').val(binding[1]);
-      $('#wai-bindings > tbody').append(element);
+      $(element).find('.waint-input-woocommerce').val(binding[0]);
+      $(element).find('.waint-input-allegro').val(binding[1]);
+      $('#waint-bindings > tbody').append(element);
     }
   }
 
   // If enter key was clicked in one of inputs in settings tab submit the form
-  $('.wai-input').live('keydown', e => {
+  $('.waint-input').live('keydown', e => {
     if (e.keyCode === 13) {
       e.preventDefault();
-      $('#wai-submit').click();
+      $('#waint-submit').click();
     }
   });
 
   // Toggle Secret's visibility when checkbox is checked
-  $('#wai-allegro-secret-toggle-visibility').change(e => {
-    $('#wai-allegro-secret').get(0).type = e.target.checked ? 'text' : 'password';
+  $('#waint-allegro-secret-toggle-visibility').change(e => {
+    $('#waint-allegro-secret').get(0).type = e.target.checked ? 'text' : 'password';
   });
 
   // Add new binding
-  $('#wai-bindings-add').click(e => {
+  $('#waint-bindings-add').click(e => {
     e.preventDefault();
-    $('#wai-bindings > tbody').append(bindingElement);
+    $('#waint-bindings > tbody').append(bindingElement);
   });
 
   // Remove binding
-  $('#wai-bindings-remove').click(e => {
+  $('#waint-bindings-remove').click(e => {
     e.preventDefault();
-    $('#wai-bindings > tbody').children().last().remove();
+    $('#waint-bindings > tbody').children().last().remove();
   });
 
   // Sync WooCommerce -> Allegro
-  $('#wai-sync-woocommerce-allegro').click(e => {
+  $('#waint-sync-woocommerce-allegro').click(e => {
     e.preventDefault();
     location.href = addParamToUrl('action', 'sync-woocommerce-allegro');
   });
 
   // Sync Allegro -> WooCommerce
-  $('#wai-sync-allegro-woocommerce').click(e => {
+  $('#waint-sync-allegro-woocommerce').click(e => {
     e.preventDefault();
     location.href = addParamToUrl('action', 'sync-allegro-woocommerce');
   });
 
   // Link to Allegro
-  $('#wai-link-allegro').click(e => {
+  $('#waint-link-allegro').click(e => {
     e.preventDefault();
     location.href = addParamToUrl('action', 'link-allegro');
   });
 
   // Save bindings and submit the form
-  $('#wai-submit').click(e => {
+  $('#waint-submit').click(e => {
     e.preventDefault();
     let bindings = [];
 
-    for (let i of $('#wai-bindings > tbody').children()) {
+    for (let i of $('#waint-bindings > tbody').children()) {
       let binding = [];
-      binding.push(Number($(i).find('.wai-input-woocommerce').val()));
-      binding.push($(i).find('.wai-input-allegro').val());
+      binding.push(Number($(i).find('.waint-input-woocommerce').val()));
+      binding.push($(i).find('.waint-input-allegro').val());
       bindings.push(binding);
     }
 
-    $('#wai-bindings-json').val(JSON.stringify(bindings));
-    $('#wai-form').submit();
+    $('#waint-bindings-json').val(JSON.stringify(bindings));
+    $('#waint-form').submit();
   });
 
-  $('#wai-clean-log').click(e => {
+  $('#waint-clean-log').click(e => {
     e.preventDefault();
     location.href = addParamToUrl('action', 'clean-log-file');
   });
