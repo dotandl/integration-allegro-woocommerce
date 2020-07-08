@@ -2,7 +2,7 @@
 ### Wtyczka do WordPressa synchronizująca dostępność produktów między WooCommerce a Allegro
 
 ## Instalacja wtyczki
-Po prostu sklonuj to repozytorium do folderu `wp-content/plugins/woocommerce-allegro-integration` i aktywuj wtyczkę z panelu WordPressa.
+Po prostu sklonuj to repozytorium do folderu `wp-content/plugins/integration-allegro-woocommerce` i aktywuj wtyczkę z panelu WordPressa.
 
 ## Łączenie z Allegro
 Przejdź do [apps.developer.allegro.pl](https://apps.developer.allegro.pl/) i utwórz nową aplikację. Wpisz jej nazwę, opcjonalnie opis i zaznacz, że *aplikacja będzie posiadać dostęp do przeglądarki*. Następnie, w *Adresu URI do przekierowania* wpisz adres widoczny w panelu Integracji WooCommerce i Allegro (np. `http[s]://twoja-strona//wp-admin/tools.php?page=waint`) i naciśnij *Dodaj*. Później skopiuj *Client ID* i *Client Secret*, wklej je w panelu i *Zapisz ustawienia*. Ostatni krok to kliknięcie *Połącz z Allegro*.
