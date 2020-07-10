@@ -1,15 +1,18 @@
 <?php
 /**
- * Plugin Name: Integration of Allegro and WooCommerce
- * Plugin URI:  https://github.com/dotandl/integration-allegro-woocommerce
- * Description: Plugin that syncs products' availability between WooCommerce and Allegro
- * Version:     1.0.0
- * Author:      andl
- * Author URI:  https://github.com/dotandl
- * License:     GPL v2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: waint
- * Domain Path: /i18n
+ * Plugin Name:           Integration of Allegro and WooCommerce
+ * Plugin URI:            https://github.com/dotandl/integration-allegro-woocommerce
+ * Description:           Plugin that syncs products' availability between WooCommerce and Allegro
+ * Version:               1.0.0
+ * Author:                andl
+ * Author URI:            https://github.com/dotandl
+ * License:               GPL v2 or later
+ * License URI:           https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:           waint
+ * Domain Path:           /i18n
+ *
+ * WC requires at least:  4.0.0
+ * WC tested up to:       4.3.0
  */
 
 // WAInt prefix in the code means: <W>ooCommerce <A>llegro <Int>egration
