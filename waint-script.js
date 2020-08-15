@@ -44,7 +44,7 @@ jQuery($ => {
   }
 
   // If enter key was clicked in one of inputs in settings tab submit the form
-  $('.waint-input').live('keydown', e => {
+  $(document).on('keydown', '.waint-input', e => {
     if (e.keyCode === 13) {
       e.preventDefault();
       $('#waint-submit').click();

@@ -638,7 +638,7 @@ if (in_array('woocommerce/woocommerce.php',
               'code' => 'waint_error',
               'message' => esc_html__('Could not sync products. See the ' .
                 'logs for more information', 'waint'),
-              'type' => 'success'
+              'type' => 'error'
             ));
 
             return;
@@ -690,7 +690,7 @@ if (in_array('woocommerce/woocommerce.php',
               'code' => 'waint_error',
               'message' => esc_html__('Could not sync products. See the logs ' .
                 'for more information', 'waint'),
-              'type' => 'success'
+              'type' => 'error'
             ));
 
             return;

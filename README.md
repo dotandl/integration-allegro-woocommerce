@@ -4,7 +4,7 @@
 [README in Polish](README.pl-PL.md)
 
 ## Installing the plugin
-The plugin is available on [plugins.wordpress.org](https://plugins.wordpress.org/plugins/integration-allegro-woocommerce) - you can find it in the WordPress panel in the *Plugins* menu or download the `zip` file from the aforementioned site and install it in the *Plugins* menu too. You can also just clone this Git repository into `wp-content/plugins/integration-allegro-woocommerce` directory and enable the plugin from the WordPress panel.
+The plugin is available on [plugins.wordpress.org](https://wordpress.org/plugins/integration-allegro-woocommerce) - you can find it in the WordPress panel in the *Plugins* menu or download the `zip` file from the aforementioned site and install it in the *Plugins* menu too. You can also just clone this Git repository into `wp-content/plugins/integration-allegro-woocommerce` directory and enable the plugin from the WordPress panel.
 
 ## Connecting to Allegro
 Go to [apps.developer.allegro.pl](https://apps.developer.allegro.pl/) and create new application. Type the name, optional description and select that *the app will have access to web browser*. Then, in *redirect URIs*type the address shown in the Integration of Allegro and WooCommerce's panel (like `http[s]://your-site//wp-admin/tools.php?page=waint`) and click *add*. Next copy the *Client ID* and *Client Secret*, paste them in the panel and *Save settings*. The last step is to click *Link to Allegro*.

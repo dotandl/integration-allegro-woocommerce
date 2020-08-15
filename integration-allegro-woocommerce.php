@@ -12,7 +12,7 @@
  * Domain Path:           /i18n
  *
  * WC requires at least:  4.0.0
- * WC tested up to:       4.3.0
+ * WC tested up to:       4.3.3
  */
 
 // WAInt prefix in the code means: <W>ooCommerce <A>llegro <Int>egration
@@ -23,13 +23,18 @@ defined('ABSPATH') or die('Error: Plugin has been run outside of WordPress');
 
 if (in_array('woocommerce/woocommerce.php',
   apply_filters('active_plugins', get_option('active_plugins')))) {
+
   define('WAINT_LOGFILE', plugin_dir_path(__FILE__) . 'waint-debug.log');
+  define('WAINT_LOGFILE_URL', plugins_url('waint-debug.log', __FILE__));
 
   // If you want to use Allegro Sandbox instead of Allegro,
   // uncomment the line below
-  //define('WAINT_USE_ALLEGRO_SANDBOX', TRUE);
+  define('WAINT_USE_ALLEGRO_SANDBOX', TRUE);
 
-  require_once 'Sync.php';
+  // If don't you want to enable logs, uncomment the line below
+  //define(WAINT_DONT_LOG, TRUE);
+
+  require_once 'sync.php';
 
   /**
    * Main plugin's class
@@ -62,6 +67,15 @@ if (in_array('woocommerce/woocommerce.php',
      * Default constructor
      */
     public function __construct() {
+      // Check if logging file exists and create it
+      if (!defined('WAINT_DONT_LOG') && !file_exists(WAINT_LOGFILE)) {
+        if ($err = !touch(WAINT_LOGFILE))
+          define('WAINT_LOG_ERROR', TRUE);
+
+        if (!chmod(WAINT_LOGFILE, 0644))
+          define('WAINT_LOG_ERROR', TRUE);
+      }
+
       // Bind actions to methods
       add_action('plugins_loaded', array($this, 'i18nLoad'));
       add_action('admin_init', array($this, 'createSettings'));
@@ -100,6 +114,9 @@ if (in_array('woocommerce/woocommerce.php',
       string $message,
       string $messageType = 'INFO'
     ): void {
+      if (defined('WAINT_DONT_LOG'))
+        return;
+
       $time = $time->format(DateTimeInterface::ISO8601);
 
       if ($messageType !== 'INFO' &&
@@ -109,7 +126,10 @@ if (in_array('woocommerce/woocommerce.php',
 
       $message = "[$time] ($messageType) $funcName '$message'";
 
-      file_put_contents(WAINT_LOGFILE, $message . PHP_EOL, FILE_APPEND);
+      $res = file_put_contents(WAINT_LOGFILE, $message . PHP_EOL, FILE_APPEND);
+
+      if ($res === FALSE)
+        define('WAINT_LOG_ERROR', TRUE);
     }
 
     /**
@@ -183,9 +203,9 @@ if (in_array('woocommerce/woocommerce.php',
       $charactersLength = strlen($characters);
 
       $randomString = '';
-      for ($i = 0; $i < $length; $i++) {
-          $randomString .= $characters[rand(0, $charactersLength - 1)];
-      }
+
+      for ($i = 0; $i < $length; $i++)
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
 
       return $randomString;
     }
@@ -547,8 +567,16 @@ if (in_array('woocommerce/woocommerce.php',
         ?>
         <h2><?php esc_html_e('Logs', 'waint'); ?></h2>
         <p><?php esc_html_e('Debug info', 'waint'); ?></p>
+        <p>
+          <?php
+          if (defined('WAINT_LOG_ERROR'))
+            esc_html_e('It looks like you have disabled the logging. If you ' .
+              'haven\'t done that, check the rights for the user PHP ' .
+              'interpreter runs on.', 'waint');
+          ?>
+        </p>
         <textarea id="waint-logs" rows="10" readonly><?php echo @file_get_contents(WAINT_LOGFILE); ?></textarea>
-        <a href="<?php echo WAINT_LOGFILE; ?>" class="button button-primary" download><?php esc_html_e('Download log file', 'waint'); ?></a>
+        <a href="<?php echo WAINT_LOGFILE_URL; ?>" class="button button-primary" download><?php esc_html_e('Download log file', 'waint'); ?></a>
         <button class="button button-secondary" id="waint-clean-log"><?php esc_html_e('Clean log file', 'waint'); ?></button>
         <?php
             break;
