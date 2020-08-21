@@ -3,7 +3,7 @@
  * Plugin Name:           Integration of Allegro and WooCommerce
  * Plugin URI:            https://github.com/dotandl/integration-allegro-woocommerce
  * Description:           Plugin that syncs products' availability between WooCommerce and Allegro
- * Version:               1.0.0
+ * Version:               1.0.1
  * Author:                andl
  * Author URI:            https://github.com/dotandl
  * License:               GPL v2 or later
@@ -29,7 +29,7 @@ if (in_array('woocommerce/woocommerce.php',
 
   // If you want to use Allegro Sandbox instead of Allegro,
   // uncomment the line below
-  define('WAINT_USE_ALLEGRO_SANDBOX', TRUE);
+  //define('WAINT_USE_ALLEGRO_SANDBOX', TRUE);
 
   // If don't you want to enable logs, uncomment the line below
   //define(WAINT_DONT_LOG, TRUE);
@@ -81,11 +81,14 @@ if (in_array('woocommerce/woocommerce.php',
       add_action('admin_init', array($this, 'createSettings'));
       add_action('admin_menu', array($this, 'createMenu'));
       add_action('admin_enqueue_scripts', array($this, 'loadStylesScripts'));
-      add_action('init', array($this, 'configureCronAndTokenRefreshing'));
+      add_action('init', array($this, 'configure'));
       add_action('woocommerce_thankyou',
         array($this, 'hookNewOrderWooCommerce'));
       add_action('waint_check_new_orders_allegro',
-        array($this, 'processNewOrderAllegro'));
+        array($this, 'processNewOrdersAllegro'));
+
+      register_activation_hook(__FILE__, array($this, 'activate'));
+      register_deactivation_hook(__FILE__, array($this, 'deactivate'));
 
       // Use either Allegro or Allegro Sandbox
       if (defined('WAINT_USE_ALLEGRO_SANDBOX')) {
@@ -286,16 +289,36 @@ if (in_array('woocommerce/woocommerce.php',
         + $interval->s;
     }
 
+    /**
+     * Function loading the translations
+    */
     public function i18nLoad(): void {
       $langsPath = basename(dirname(__FILE__)) . '/i18n';
       load_plugin_textdomain('waint', FALSE, $langsPath);
     }
 
     /**
-     * Function configuring the cron, refreshing the token and doing many
-     * other things
+     * Function hooked to the activation hook
      */
-    public function configureCronAndTokenRefreshing(): void {
+    public function activate() {
+      if (!wp_next_scheduled('waint_check_new_orders_allegro'))
+        wp_schedule_event(time(), 'hourly', 'waint_check_new_orders_allegro');
+    }
+
+    /**
+     * Function hooked to the deactivation hook
+     */
+    public function deactivate() {
+      $timestamp = wp_next_scheduled('waint_check_new_orders_allegro');
+      wp_unschedule_event($timestamp, 'waint_check_new_orders_allegro');
+    }
+
+    /**
+     * Function configuring the token refreshing creating all needed options
+     */
+    public function configure(): void {
+      // I don't use WP Cron here because the token expiry probably might
+      // change at any time
       $option = get_option('waint_token_expiry');
 
       if (!empty($option)) {
@@ -305,9 +328,6 @@ if (in_array('woocommerce/woocommerce.php',
         if ($difference >= $option['expires_in'])
           $this->refreshToken();
       }
-
-      if (!wp_next_scheduled('waint_check_new_orders_allegro'))
-        wp_schedule_event(time(), 'hourly', 'waint_check_new_orders_allegro');
 
       if (!get_option('waint_token'))
         add_option('waint_token');

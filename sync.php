@@ -197,6 +197,9 @@ if (in_array('woocommerce/woocommerce.php',
      * Function refreshing the token
      */
     private function refreshToken(): void {
+      if (defined('WAINT_TOKEN_ALREADY_REFRESHED'))
+        return;
+
       $this->log(new DateTime(), __METHOD__, 'Started refreshing the token');
       $options = get_option('waint_options');
 
@@ -289,6 +292,8 @@ if (in_array('woocommerce/woocommerce.php',
         'Token refreshed successfully',
         'SUCCESS'
       );
+
+      define('WAINT_TOKEN_ALREADY_REFRESHED', TRUE);
     }
 
     /**
@@ -771,7 +776,11 @@ if (in_array('woocommerce/woocommerce.php',
       );
     }
 
-    private function processNewOrdersAllegro(): void {
+    /**
+     * Function processing new order in Allegro (syncing quantity from
+     *  Allegro to WooCommerce for ordered products)
+     */
+    public function processNewOrdersAllegro(): void {
       $this->log(
         new DateTime(),
         __METHOD__,

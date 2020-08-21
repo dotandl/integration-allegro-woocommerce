@@ -4,7 +4,7 @@ Donate Link: https://github.com/dotandl/integration-allegro-woocommerce
 Tags: woocommerce, allegro, product, products, quantity, availability, sync, synchronize
 Requires at least: 5.0
 Tested up to: 5.5
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 Requires PHP: 7.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -34,6 +34,13 @@ Open new GitHub Issue or PR in the [project's repository](https://github.com/dot
 = 1.0.0 =
 * First version of the plugin
 
+= 1.0.1 =
+* Fix some problems that may make the plugin not work
+* Fix the bug that Allegro API Token refreshes twice and the second refresh makes HTTP 400 error
+
 == Upgrade Notice ==
 = 1.0.0 =
 * First version of the plugin
+
+= 1.0.1 =
+* This update fixes some bugs that may make the plugin not work and display unfounded errors
